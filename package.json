@@ -7,8 +7,10 @@
   "license": "ISC",
   "scripts": {
     "serve": "webpack-dev-server",
-    "wasm": "wasm-pack build ./wasm --scope hrloca",
-    "dev": "chokidar './wasm/src/**/*.rs' -c 'npm run wasm'"
+    "build:wasm": "wasm-pack build ./wasm --scope hrloca",
+    "watch": "chokidar './wasm/src/**/*.rs' -c 'npm run build:wasm'",
+    "dev": "npm run build:wasm && npm run serve & npm run watch",
+    "test": "cd ./wasm && cargo test"
   },
   "dependencies": {
     "chokidar-cli": "^3.0.0"

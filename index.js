@@ -1,5 +1,5 @@
-const js = import("./wasm/pkg");
+const wasm = import("./wasm/pkg");
 
-js.then((w) => {
-  w.greet("JavaScript");
+wasm.then((w) => {
+  console.log("leady game.");
 });

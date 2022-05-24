@@ -1,5 +1,5 @@
 [package]
-name = "block-wasm"
+name = "blocks"
 version = "0.1.0"
 edition = "2021"
 authors = ["hrloca<hr.loca@gmail.com>"]
@@ -11,4 +11,25 @@ repository = "https://github.com/hrloca/block-wasm"
 crate-type = ["cdylib"]
 
 [dependencies]
-wasm-bindgen = "0.2"
+futures = "0.3"
+js-sys = "0.3.56"
+wasm-bindgen = "0.2.79"
+wasm-bindgen-futures = "0.4.30"
+rand = "0.8.5"
+
+[dependencies.web-sys]
+version = "0.3.4"
+features = [
+  'CanvasRenderingContext2d',
+  'CssStyleDeclaration',
+  'Document',
+  'Element',
+  'EventTarget',
+  'HtmlCanvasElement',
+  'HtmlElement',
+  'MouseEvent',
+  'Node',
+  'Window',
+]
+
+[workspace]
