@@ -47,9 +47,9 @@ impl Drop for AnimationFrameHandle {
 pub fn looping() {
     let closure = Rc::new(RefCell::new(None));
     let cloned_closure = closure.clone();
-    let mut id: Option<i32> = None;
+    let mut _id: Option<i32> = None;
     *cloned_closure.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-        id = Some(request_animation_frame(closure.borrow().as_ref().unwrap()))
+        _id = Some(request_animation_frame(closure.borrow().as_ref().unwrap()))
     }) as Box<dyn FnMut()>));
 
     Some(request_animation_frame(
@@ -62,12 +62,12 @@ pub fn run() {
     let cloned_closure = closure.clone();
 
     let mut i = 0;
-    let mut id: Option<i32> = None;
+    let mut _id: Option<i32> = None;
 
     *cloned_closure.borrow_mut() = Some(Closure::wrap(Box::new(move || {
         if i > 300 {
             log("done!");
-            cancel_animation_frame(id.unwrap());
+            cancel_animation_frame(_id.unwrap());
             return;
         }
 
@@ -75,10 +75,10 @@ pub fn run() {
 
         log(&(i.to_string()));
 
-        id = Some(request_animation_frame(closure.borrow().as_ref().unwrap()));
+        _id = Some(request_animation_frame(closure.borrow().as_ref().unwrap()));
     }) as Box<dyn FnMut()>));
 
-    id = Some(request_animation_frame(
+    _id = Some(request_animation_frame(
         cloned_closure.borrow().as_ref().unwrap(),
     ));
 }

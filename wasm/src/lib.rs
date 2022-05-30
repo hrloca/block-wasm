@@ -7,7 +7,6 @@ pub mod blocks;
 pub mod dom;
 pub mod store;
 pub mod system;
-pub mod ui;
 pub mod util;
 
 #[wasm_bindgen(start)]
