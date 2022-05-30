@@ -3,6 +3,32 @@ mod tests {
     use super::super::*;
 
     #[test]
+    fn shoud_block_is_connect() {
+        let blocks = Blocks::create(to_block_table(vec![
+            vec![1, 1, 2, 2],
+            vec![2, 2, 1, 1],
+            vec![1, 3, 1, 1],
+            vec![1, 3, 1, 1],
+        ]));
+
+        let next = blocks.connect();
+        if let Some(startpoint) = next.table.pick(Pos::from(0, 0)) {
+            assert_eq!(startpoint.connect.top, false);
+            assert_eq!(startpoint.connect.right, true);
+            assert_eq!(startpoint.connect.left, false);
+            assert_eq!(startpoint.connect.bottom, false);
+        };
+
+        let next = blocks.change(Pos::from(1, 0), Pos::from(0, 0));
+        if let Some(startpoint) = next.table.pick(Pos::from(0, 0)) {
+            assert_eq!(startpoint.connect.top, false);
+            assert_eq!(startpoint.connect.right, false);
+            assert_eq!(startpoint.connect.left, false);
+            assert_eq!(startpoint.connect.bottom, false);
+        };
+    }
+
+    #[test]
     #[should_panic]
     fn shoud_panic() {
         let pos = Pos::from(0, 0);
@@ -42,11 +68,23 @@ mod tests {
         assert_eq!(endpoint_has(Dir::Right), false);
     }
 
-    // fn to_block_table(v: Vec<Vec<u8>>) -> Table<Block> {
-    //     Table::create(
-    //         v.into_iter()
-    //             .map(|row| row.into_iter().map(Block::create).collect())
-    //             .collect(),
-    //     )
-    // }
+    fn to_block_table(v: Vec<Vec<u8>>) -> Table<Block> {
+        Table::create(
+            v.into_iter()
+                .map(|row| {
+                    row.into_iter()
+                        .map(|kind| Block {
+                            kind,
+                            connect: Around {
+                                top: false,
+                                bottom: false,
+                                left: false,
+                                right: false,
+                            },
+                        })
+                        .collect()
+                })
+                .collect(),
+        )
+    }
 }

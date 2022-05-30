@@ -36,6 +36,10 @@ impl Pos {
         Pos { x, y }
     }
 
+    pub fn equals(&self, to: Pos) -> bool {
+        self.x == to.x && self.y == to.y
+    }
+
     pub fn add(&self, x: usize, y: usize) -> Pos {
         Pos {
             x: self.x + x,
@@ -68,20 +72,24 @@ impl<T> Table<T> {
     }
 
     pub fn around(&self, current: Pos) -> Around<Option<&T>> {
-        let has = self.has(current);
         Around {
-            top: self.pick(has(Dir::Top), || self.cell(current.sub(0, 1))),
-            bottom: self.pick(has(Dir::Bottom), || self.cell(current.add(0, 1))),
-            left: self.pick(has(Dir::Left), || self.cell(current.sub(1, 0))),
-            right: self.pick(has(Dir::Right), || self.cell(current.add(1, 0))),
+            top: self.may_pick(Dir::Top, current),
+            bottom: self.may_pick(Dir::Bottom, current),
+            left: self.may_pick(Dir::Left, current),
+            right: self.may_pick(Dir::Right, current),
         }
     }
 
-    pub fn pick<U>(&self, has: bool, delay: impl Fn() -> U) -> Option<U> {
-        if has {
-            Some(delay())
-        } else {
-            None
+    pub fn may_pick(&self, dir: Dir, at: Pos) -> Option<&T> {
+        if !self.has(at)(dir) {
+            return None;
+        }
+
+        match dir {
+            Dir::Top => self.pick(at.sub(0, 1)),
+            Dir::Bottom => self.pick(at.add(0, 1)),
+            Dir::Left => self.pick(at.sub(1, 0)),
+            Dir::Right => self.pick(at.add(1, 0)),
         }
     }
 
@@ -94,8 +102,12 @@ impl<T> Table<T> {
         }
     }
 
-    pub fn cell(&self, current: Pos) -> &T {
-        &self.body[current.y][current.x]
+    pub fn pick(&self, base: Pos) -> Option<&T> {
+        match base {
+            pos if pos.y > self.size().1 - 1 => None,
+            pos if pos.x > self.size().0 - 1 => None,
+            _ => Some(&self.body[base.y][base.x]),
+        }
     }
 
     pub fn size(&self) -> (usize, usize) {
