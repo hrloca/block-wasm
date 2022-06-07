@@ -1,13 +1,14 @@
-use super::table::*;
-
-#[derive(Debug, Clone, Copy)]
+#[derive(Eq, PartialEq, Debug, Clone, Copy)]
 pub struct Block {
     pub kind: u8,
-    pub connect: Around<bool>,
 }
 
 impl Block {
-    pub fn is_same_with(&self, other: &Block) -> bool {
+    pub fn of(kind: u8) -> Block {
+        Block { kind }
+    }
+
+    pub fn is_same_kind(&self, other: &Block) -> bool {
         self.kind == other.kind
     }
 }

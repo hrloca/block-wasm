@@ -1,8 +1,7 @@
 mod block;
 mod blocks;
-mod table;
 mod test;
 
+use crate::board::*;
 pub use block::*;
 pub use blocks::*;
-pub use table::*;

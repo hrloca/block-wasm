@@ -3,88 +3,59 @@ mod tests {
     use super::super::*;
 
     #[test]
-    fn shoud_block_is_connect() {
-        let blocks = Blocks::create(to_block_table(vec![
-            vec![1, 1, 2, 2],
-            vec![2, 2, 1, 1],
-            vec![1, 3, 1, 1],
-            vec![1, 3, 1, 1],
-        ]));
-
-        let next = blocks.connect();
-        if let Some(startpoint) = next.table.pick(Pos::from(0, 0)) {
-            assert_eq!(startpoint.connect.top, false);
-            assert_eq!(startpoint.connect.right, true);
-            assert_eq!(startpoint.connect.left, false);
-            assert_eq!(startpoint.connect.bottom, false);
-        };
-
-        let next = blocks.change(Pos::from(1, 0), Pos::from(0, 0));
-        if let Some(startpoint) = next.table.pick(Pos::from(0, 0)) {
-            assert_eq!(startpoint.connect.top, false);
-            assert_eq!(startpoint.connect.right, false);
-            assert_eq!(startpoint.connect.left, false);
-            assert_eq!(startpoint.connect.bottom, false);
-        };
+    fn playground() {
+        // #[rustfmt::skip]
     }
 
     #[test]
-    #[should_panic]
-    fn shoud_panic() {
-        let pos = Pos::from(0, 0);
-        pos.sub(1, 1);
+    fn ブロックを削除できる() {
+        // #[rustfmt::skip]
+        let board = Board::init(Size::of(3, 3), b(1));
+        let deleted = delete(
+            &board,
+            &vec![Point::of(0, 0), Point::of(1, 0), Point::of(2, 0)],
+        );
+
+        assert_eq!(*deleted.pick(Point::of(2, 0)), None::<Block>);
     }
 
     #[test]
-    fn shoud_pos() {
-        let pos = Pos::from(5, 5);
-        let add = pos.add(1, 1);
-        assert_eq!(add.x, 6);
-        assert_eq!(add.y, 6);
-        let sub = pos.sub(2, 5);
-        assert_eq!(sub.x, 3);
-        assert_eq!(sub.y, 0);
-    }
-
-    #[test]
-    fn should_do_table() {
-        let tabel = Table::create(vec![
-            vec![1, 1, 2, 2],
-            vec![2, 2, 1, 1],
-            vec![1, 3, 1, 1],
-            vec![1, 3, 1, 1],
+    fn ブロックを移動できる() {
+        #[rustfmt::skip]
+        let board = Board::from(vec![
+            vec![b(1), b(2), b(3)],
+            vec![b(4), b(5), b(6)],
+            vec![None, None, None],
         ]);
 
-        let startpoint_has = tabel.has(Pos::from(0, 0));
-        assert_eq!(startpoint_has(Dir::Top), false);
-        assert_eq!(startpoint_has(Dir::Bottom), true);
-        assert_eq!(startpoint_has(Dir::Left), false);
-        assert_eq!(startpoint_has(Dir::Right), true);
+        let moved = move_to(
+            &board,
+            &vec![
+                Move::of(Point::of(0, 0), Point::of(2, 2)),
+                Move::of(Point::of(1, 0), Point::of(1, 2)),
+                Move::of(Point::of(2, 0), Point::of(0, 2)),
+            ],
+        );
 
-        let endpoint_has = tabel.has(Pos::from(3, 3));
-        assert_eq!(endpoint_has(Dir::Top), true);
-        assert_eq!(endpoint_has(Dir::Bottom), false);
-        assert_eq!(endpoint_has(Dir::Left), true);
-        assert_eq!(endpoint_has(Dir::Right), false);
+        assert_eq!(moved.pick(Point::of(2, 2)).unwrap().kind, 1);
     }
 
-    fn to_block_table(v: Vec<Vec<u8>>) -> Table<Block> {
-        Table::create(
-            v.into_iter()
-                .map(|row| {
-                    row.into_iter()
-                        .map(|kind| Block {
-                            kind,
-                            connect: Around {
-                                top: false,
-                                bottom: false,
-                                left: false,
-                                right: false,
-                            },
-                        })
-                        .collect()
-                })
-                .collect(),
-        )
+    #[test]
+    fn ブロックを交換できる() {
+        #[rustfmt::skip]
+        let board = Board::from(vec![
+            vec![b(1), b(2), b(3)],
+            vec![b(4), b(5), b(6)],
+            vec![b(7), b(8), b(9)],
+        ]);
+
+        let changed = change(&board, Point::of(0, 0), Point::of(2, 2));
+
+        assert_eq!(changed.pick(Point::of(0, 0)).unwrap().kind, 9);
+        assert_eq!(changed.pick(Point::of(2, 2)).unwrap().kind, 1);
+    }
+
+    fn b(kind: u8) -> Option<Block> {
+        Some(Block::of(kind))
     }
 }

@@ -4,10 +4,14 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 pub mod blocks;
+pub mod board;
 pub mod dom;
 pub mod store;
 pub mod system;
-pub mod util;
+
+pub fn type_of<T>(_: T) -> () {
+    println!("{}", std::any::type_name::<T>());
+}
 
 #[wasm_bindgen(start)]
 pub async fn run() {
