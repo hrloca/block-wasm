@@ -1,27 +1,42 @@
 use super::*;
 
 pub type Cell = Option<Block>;
-pub type Blocks = Board<Cell>;
-pub type Builder = fn(Blocks, (Point, &Option<Block>)) -> Blocks;
-pub type Processor = fn(&Blocks) -> Blocks;
+pub type BlockBoard = Board<Cell>;
+pub type Builder = fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard;
+pub type Processor = fn(&BlockBoard) -> BlockBoard;
 pub type MoveList = Vec<Move>;
 pub type PointList = Vec<Point>;
+pub type BlockList = Vec<Block>;
 
-pub fn delete(blocks: &Blocks, points: &Vec<Point>) -> Blocks {
-    blocks.update(del(points))
+pub fn delete(blocks: &BlockBoard, block_list: &BlockList) -> BlockBoard {
+    blocks.update(del(block_list))
 }
 
-pub fn move_to(blocks: &Blocks, moves: &Vec<Move>) -> Blocks {
+pub fn move_to(blocks: &BlockBoard, moves: &Vec<Move>) -> BlockBoard {
     blocks.update(mov(moves))
 }
 
-pub fn change(blocks: &Blocks, a: Point, b: Point) -> Blocks {
+pub fn change(blocks: &BlockBoard, a: Point, b: Point) -> BlockBoard {
     blocks.update(cp(&vec![Move::of(a, b), Move::of(b, a)]))
+}
+
+pub fn blank(blocks: &BlockBoard, points: &Vec<Point>) -> BlockBoard {
+    blocks.update(bla(points))
 }
 
 // -------------------------------------
 
-fn del(points: &PointList) -> impl Fn(Blocks, (Point, &Option<Block>)) -> Blocks + '_ {
+fn del(block_list: &BlockList) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
+    |next, (cur, mayblock)| match mayblock {
+        None => next,
+        Some(block) => match block_list.iter().find(|b| b.equals(block)) {
+            None => next,
+            _ => next.insert(cur, None),
+        },
+    }
+}
+
+fn bla(points: &PointList) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
     |next, (cur, mayblock)| match mayblock {
         None => next,
         Some(_) => match points.iter().find(|x| x.equals(cur)) {
@@ -31,7 +46,7 @@ fn del(points: &PointList) -> impl Fn(Blocks, (Point, &Option<Block>)) -> Blocks
     }
 }
 
-fn mov(moves: &MoveList) -> impl Fn(Blocks, (Point, &Option<Block>)) -> Blocks + '_ {
+fn mov(moves: &MoveList) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
     |next, (cur, mayblock)| match mayblock {
         None => next,
         Some(_) => match moves.iter().find(|x| x.from == (cur)) {
@@ -42,7 +57,7 @@ fn mov(moves: &MoveList) -> impl Fn(Blocks, (Point, &Option<Block>)) -> Blocks +
     }
 }
 
-fn cp(moves: &MoveList) -> impl Fn(Blocks, (Point, &Option<Block>)) -> Blocks + '_ {
+fn cp(moves: &MoveList) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
     |next, (cur, mayblock)| match mayblock {
         None => next,
         Some(_) => match moves.iter().find(|x| x.from == (cur)) {
@@ -52,21 +67,23 @@ fn cp(moves: &MoveList) -> impl Fn(Blocks, (Point, &Option<Block>)) -> Blocks + 
     }
 }
 
-fn has(blocks: &Blocks, point: Point) -> bool {
+fn has(blocks: &BlockBoard, point: Point) -> bool {
     match blocks.pick(point) {
         None => false,
         Some(_) => true,
     }
 }
 
-pub fn inspect(blocks: &Blocks) {
+pub fn inspect(blocks: &BlockBoard) {
     blocks.inspect(|(_, cell)| match cell {
         None => print!("{:^10}", "-"),
         Some(x) => print!("{:^10}", x.kind),
     });
 }
 
-pub fn synthesize(pros: &Vec<Builder>) -> impl Fn(Blocks, (Point, &Option<Block>)) -> Blocks + '_ {
+pub fn synthesize(
+    pros: &Vec<Builder>,
+) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
     |next, (point, mayblock)| {
         pros.iter()
             .fold(next, |acc, cur| cur(acc, (point, mayblock)))

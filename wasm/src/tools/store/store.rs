@@ -3,7 +3,7 @@ pub type Reducer<T, A> = fn(state: &T, types: A) -> T;
 pub struct Store<T, A> {
     pub state: T,
     reducer: Reducer<T, A>,
-    cb: Option<fn(state: &T) -> ()>,
+    cb: Option<Box<dyn Fn(&T) -> ()>>,
 }
 
 impl<T, A> Store<T, A> {
@@ -19,17 +19,20 @@ impl<T, A> Store<T, A> {
         self.state = state;
     }
 
-    pub fn subscribe(&mut self, cb: fn(state: &T) -> ()) {
+    pub fn subscribe(&mut self, cb: Box<dyn Fn(&T) -> ()>) {
         self.cb = Some(cb);
+    }
+
+    pub fn get_state(&self) -> &T {
+        &self.state
     }
 
     pub fn dispatch(&mut self, action: A) {
         let new_state = (self.reducer)(&self.state, action);
 
-        if let None = self.cb {
-            ()
-        } else {
-            self.cb.unwrap()(&new_state);
+        match &self.cb {
+            None => (),
+            Some(x) => x(&new_state),
         }
 
         self.state = new_state;

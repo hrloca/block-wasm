@@ -9,14 +9,23 @@ mod tests {
 
     #[test]
     fn ブロックを削除できる() {
-        // #[rustfmt::skip]
-        let board = Board::init(Size::of(3, 3), b(1));
+        #[rustfmt::skip]
+        let board = Board::from(vec![
+            vec![b(1), b(2), b(3)],
+            vec![b(4), b(5), b(6)],
+            vec![b(7), b(8), b(9)],
+        ]);
+
         let deleted = delete(
             &board,
-            &vec![Point::of(0, 0), Point::of(1, 0), Point::of(2, 0)],
+            &vec![
+                board.pick(Point::of(0, 0)).unwrap(),
+                board.pick(Point::of(1, 0)).unwrap(),
+                board.pick(Point::of(2, 0)).unwrap(),
+            ],
         );
 
-        assert_eq!(*deleted.pick(Point::of(2, 0)), None::<Block>);
+        inspect(&deleted);
     }
 
     #[test]

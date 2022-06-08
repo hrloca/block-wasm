@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use super::super::store::*;
+    use super::super::*;
 
     #[test]
-    fn should_chanage_state_at_sync() {
+    fn 同期的に状態が変更できる() {
         enum ActionTypes {
             Up,
             Down,

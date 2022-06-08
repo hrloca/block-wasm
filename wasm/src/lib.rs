@@ -7,7 +7,8 @@ pub mod blocks;
 pub mod board;
 pub mod dom;
 pub mod store;
-pub mod system;
+pub mod tools;
+pub mod ui;
 
 pub fn type_of<T>(_: T) -> () {
     println!("{}", std::any::type_name::<T>());
@@ -15,39 +16,48 @@ pub fn type_of<T>(_: T) -> () {
 
 #[wasm_bindgen(start)]
 pub async fn run() {
-    let document = dom::document();
-    let body = dom::body();
-    let stop = document.create_element("p").unwrap();
-    let start = document.create_element("p").unwrap();
-    stop.set_text_content(Some("STOP"));
-    start.set_text_content(Some("START"));
-    body.append_child(&stop).unwrap();
-    body.append_child(&start).unwrap();
+    let store = Rc::new(RefCell::new(tools::store::Store::create(
+        store::create_state(),
+        store::reducer,
+    )));
 
-    let frame_engine = Rc::new(RefCell::new(system::FrameEngine::new(|| {
-        dom::log("out: update");
-    })));
+    let ui = Rc::new(RefCell::new(ui::UI::new()));
 
-    let a = Rc::clone(&frame_engine);
-    let start_handler = Closure::wrap(Box::new(move |_: web_sys::MouseEvent| {
-        a.borrow_mut().start();
-    }) as Box<dyn FnMut(_)>);
+    {
+        let ui = Rc::clone(&ui);
+        let store = Rc::clone(&store);
 
-    start
-        .add_event_listener_with_callback("mousedown", start_handler.as_ref().unchecked_ref())
-        .unwrap();
+        let mut fe = tools::frame_engine::FrameEngine::new(Rc::new(RefCell::new(move || {
+            let store = store.as_ref().borrow_mut();
+            let ui = ui.as_ref().borrow_mut();
+            let state = store.get_state();
+            ui.draw(state);
+        })));
 
-    start_handler.forget();
+        fe.start();
+    }
 
-    let b = Rc::clone(&frame_engine);
-    let stop_handler = Closure::wrap(Box::new(move |_: web_sys::MouseEvent| {
-        b.borrow_mut().stop();
-    }) as Box<dyn FnMut(_)>);
+    {
+        let ui = ui.borrow_mut();
+        let store = Rc::clone(&store);
+        let handler = Closure::wrap(Box::new(move |_: web_sys::MouseEvent| {
+            store.borrow_mut().dispatch(store::Actions::Change(
+                board::Point::of(1, 0),
+                board::Point::of(2, 0),
+            ));
+        }) as Box<dyn FnMut(_)>);
 
-    stop.add_event_listener_with_callback("mousedown", stop_handler.as_ref().unchecked_ref())
-        .unwrap();
+        let button = ui.el("button", None);
+        button.set_text_content(Some("RUN"));
+        button
+            .add_event_listener_with_callback("click", handler.as_ref().unchecked_ref())
+            .unwrap();
 
-    stop_handler.forget();
+        ui.render(ui.el("div", Some(vec![button])));
+        ui.set_canvas();
+
+        handler.forget();
+    }
 }
 
 #[macro_export]

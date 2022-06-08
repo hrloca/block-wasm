@@ -6,15 +6,15 @@ use wasm_bindgen::prelude::*;
 pub struct FrameEngine {
     timer_id: Rc<RefCell<Option<u32>>>,
     is_active: bool,
-    update: Box<fn() -> ()>,
+    update: Rc<RefCell<dyn Fn() -> ()>>,
 }
 
 impl FrameEngine {
-    pub fn new(update: fn() -> ()) -> FrameEngine {
+    pub fn new(updater: Rc<RefCell<dyn Fn() -> ()>>) -> FrameEngine {
         FrameEngine {
             timer_id: Rc::new(RefCell::new(None)),
             is_active: false,
-            update: Box::new(update),
+            update: updater,
         }
     }
 
@@ -25,10 +25,10 @@ impl FrameEngine {
 
             let timer = self.timer_id.clone();
             let timer2 = self.timer_id.clone();
-            let update = self.update.clone();
+            let update = Rc::clone(&self.update);
 
             *cloned_closure.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-                update();
+                update.borrow_mut()();
                 *timer.borrow_mut() = Some(dom::requestAnimationFrame(
                     closure.borrow().as_ref().unwrap(),
                 ));
