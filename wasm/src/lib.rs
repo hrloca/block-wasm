@@ -31,6 +31,7 @@ pub async fn run() {
             let store = store.as_ref().borrow_mut();
             let ui = ui.as_ref().borrow_mut();
             let state = store.get_state();
+
             ui.draw(state);
         })));
 
@@ -48,7 +49,7 @@ pub async fn run() {
         }) as Box<dyn FnMut(_)>);
 
         let button = ui.el("button", None);
-        button.set_text_content(Some("RUN"));
+        button.set_text_content(Some("exec"));
         button
             .add_event_listener_with_callback("click", handler.as_ref().unchecked_ref())
             .unwrap();

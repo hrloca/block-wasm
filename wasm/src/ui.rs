@@ -45,15 +45,19 @@ impl UI {
             self.context.as_ref().begin_path();
             state.blocks.each(|(point, block)| {
                 let ctx = ctx_for_blocks.as_ref();
-                let width = 50.0;
-                let height = 50.0;
+                let width = 100.0;
+                let height = 100.0;
                 let x = point.x as f64 * width;
                 let y = point.y as f64 * height;
+                ctx.set_fill_style(&"rgb(100,100,100)".into());
+                ctx.rect(x, y, width, height);
+                ctx.fill_rect(x, y, width, height);
+
+                ctx.set_fill_style(&"rgb(255,255,255)".into());
                 if let Some(block) = block {
                     ctx.fill_text(&block.kind.to_string(), x + width / 2.0, y + height / 2.0)
                         .unwrap();
                 }
-                ctx.rect(x, y, width, height);
             });
             self.context.as_ref().stroke();
         }
