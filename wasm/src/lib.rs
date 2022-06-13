@@ -59,15 +59,15 @@ pub async fn run() {
             let mut canvas = canvas_.borrow_mut();
 
             let a = board::Point::of(1, 0);
-            let b = board::Point::of(2, 0);
+            let b = board::Point::of(0, 0);
 
             action.lock(vec![a, b]);
             canvas.draw_particle(ui::ChangeParticle::new(
                 a,
                 b,
-                Box::new(|action, from, to| {
-                    action.change(from, to);
-                    action.unlock(vec![from, to]);
+                Box::new(|action, a, b| {
+                    action.change(a, b, false);
+                    action.unlock(vec![a, b]);
                 }),
             ));
         }) as Box<dyn FnMut(_)>);

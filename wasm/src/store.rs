@@ -29,7 +29,7 @@ impl<'a> ActionDispacher<'a> {
         ActionDispacher { store }
     }
 
-    pub fn change(&mut self, from: Point, to: Point) {
+    pub fn change(&mut self, from: Point, to: Point, dry: bool) {
         self.store.dispatch(Actions::Change(from, to))
     }
 

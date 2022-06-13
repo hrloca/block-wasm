@@ -1,6 +1,5 @@
 use super::*;
 use crate::store::*;
-use crate::tools::store::Store;
 use std::f64;
 use std::rc::Rc;
 use wasm_bindgen::JsCast;
@@ -11,7 +10,8 @@ where
     P: Particle,
 {
     body: HtmlCanvasElement,
-    main: Rc<CanvasRenderingContext2d>,
+    ctx: CanvasRenderingContext2d,
+    ctx_for_particle: CanvasRenderingContext2d,
     particles: Vec<P>,
     colors: BlockColors,
 }
@@ -21,14 +21,19 @@ where
     P: Particle,
 {
     pub fn create(canvas_element: HtmlCanvasElement) -> Self {
-        let context = canvas_element.get_context("2d").unwrap().unwrap();
-        let context = JsCast::dyn_into::<CanvasRenderingContext2d>(context).unwrap();
+        let ctx = canvas_element.get_context("2d").unwrap().unwrap();
+        let ctx = JsCast::dyn_into::<CanvasRenderingContext2d>(ctx).unwrap();
+
+        let ctx_for_particle = canvas_element.get_context("2d").unwrap().unwrap();
+        let ctx_for_particle =
+            JsCast::dyn_into::<CanvasRenderingContext2d>(ctx_for_particle).unwrap();
 
         Canvas {
             colors: BlockColors::create(),
             body: canvas_element,
             particles: Vec::new(),
-            main: Rc::new(context),
+            ctx_for_particle,
+            ctx,
         }
     }
 
@@ -53,7 +58,7 @@ where
     pub fn draw_particles(&mut self, state: &State, action: &mut ActionDispacher) {
         self.particles
             .iter_mut()
-            .for_each(|p| p.draw(state, action));
+            .for_each(|p| p.draw(&self.ctx_for_particle, state, action));
 
         self.particles.retain_mut(|p| {
             if !p.is_finish() {
@@ -65,20 +70,17 @@ where
     }
 
     pub fn render(&mut self, state: &State, action: &mut ActionDispacher) {
-        self.draw_particles(state, action);
-
-        let ctx = &self.main;
-
-        ctx.clear_rect(
+        self.ctx.clear_rect(
             0.0,
             0.0,
             self.body.width().into(),
             self.body.height().into(),
         );
 
+        self.draw_particles(state, action);
+
         {
-            let ctx = &self.main;
-            ctx.begin_path();
+            self.ctx.begin_path();
             state.blocks.each(|(point, block)| {
                 let width = 80.0;
                 let height = 80.0;
@@ -92,17 +94,18 @@ where
                 if let Some(block) = block {
                     if let Some(_) = state.locked.get(&block.id.to_string()) {
                     } else {
-                        ctx.set_fill_style(&color.into());
-                        ctx.rect(x, y, width, height);
-                        ctx.fill_rect(x, y, width, height);
-                        ctx.set_fill_style(&"rgb(0,0,0)".into());
-                        ctx.fill_text(&block.kind.to_string(), x + width / 2.0, y + height / 2.0)
+                        self.ctx.set_fill_style(&color.into());
+                        self.ctx.rect(x, y, width, height);
+                        self.ctx.fill_rect(x, y, width, height);
+                        self.ctx.set_fill_style(&"rgb(0,0,0)".into());
+                        self.ctx
+                            .fill_text(&block.kind.to_string(), x + width / 2.0, y + height / 2.0)
                             .unwrap();
                     }
                 }
             });
 
-            self.main.stroke();
+            self.ctx.stroke();
         }
     }
 }
