@@ -15,6 +15,7 @@ futures = "0.3"
 js-sys = "0.3.56"
 wasm-bindgen = "0.2.79"
 wasm-bindgen-futures = "0.4.30"
+console_error_panic_hook = { version = "0.1.6", optional = true }
 phf = { version = "0.10", default-features = false }
 
 [dependencies.web-sys]

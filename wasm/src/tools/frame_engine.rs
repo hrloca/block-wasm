@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 pub struct FrameEngine {
     timer_id: Rc<RefCell<Option<u32>>>,
     is_active: bool,
-    update: Rc<RefCell<dyn Fn() -> ()>>,
+    update: Rc<RefCell<dyn Fn()>>,
 }
 
 impl FrameEngine {

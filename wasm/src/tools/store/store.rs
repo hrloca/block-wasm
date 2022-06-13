@@ -1,12 +1,12 @@
 pub type Reducer<T, A> = fn(state: &T, types: A) -> T;
 
-pub struct Store<T, A> {
+pub struct Store<T: Clone, A> {
     pub state: T,
     reducer: Reducer<T, A>,
     cb: Option<Box<dyn Fn(&T) -> ()>>,
 }
 
-impl<T, A> Store<T, A> {
+impl<T: Clone, A> Store<T, A> {
     pub fn create(state: T, reducer: Reducer<T, A>) -> Store<T, A> {
         Store {
             cb: None,
@@ -23,8 +23,8 @@ impl<T, A> Store<T, A> {
         self.cb = Some(cb);
     }
 
-    pub fn get_state(&self) -> &T {
-        &self.state
+    pub fn get_state(&self) -> T {
+        self.state.clone()
     }
 
     pub fn dispatch(&mut self, action: A) {

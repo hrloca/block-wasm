@@ -1,6 +1,9 @@
 use crate::blocks::*;
 use crate::board::*;
+use crate::tools::store::Store;
 use std::collections::HashSet;
+
+pub type StoreType = Store<State, Actions>;
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -17,6 +20,28 @@ pub enum Actions {
     Fall,
 }
 
+pub struct ActionDispacher<'a> {
+    store: &'a mut StoreType,
+}
+
+impl<'a> ActionDispacher<'a> {
+    pub fn new(store: &'a mut StoreType) -> Self {
+        ActionDispacher { store }
+    }
+
+    pub fn change(&mut self, from: Point, to: Point) {
+        self.store.dispatch(Actions::Change(from, to))
+    }
+
+    pub fn unlock(&mut self, points: Vec<Point>) {
+        self.store.dispatch(Actions::UnLock(points))
+    }
+
+    pub fn lock(&mut self, points: Vec<Point>) {
+        self.store.dispatch(Actions::Lock(points))
+    }
+}
+
 pub fn create_state() -> State {
     State {
         blocks: Board::from(vec![
@@ -24,6 +49,7 @@ pub fn create_state() -> State {
             vec![Block::a(3, 2), Block::a(4, 4), Block::a(5, 3)],
             vec![Block::a(6, 3), Block::a(7, 4), Block::a(8, 2)],
             vec![Block::a(9, 4), Block::a(10, 4), Block::a(11, 1)],
+            vec![Block::a(12, 2), Block::a(13, 5), Block::a(14, 1)],
         ]),
         locked: HashSet::new(),
     }

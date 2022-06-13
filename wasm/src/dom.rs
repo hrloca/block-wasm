@@ -82,3 +82,8 @@ pub fn run() {
         cloned_closure.borrow().as_ref().unwrap(),
     ));
 }
+
+#[macro_export]
+macro_rules! log {
+    ($($t:tt)*) => (crate::dom::log(&format_args!($($t)*).to_string()))
+}
