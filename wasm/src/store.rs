@@ -1,5 +1,6 @@
 use crate::blocks::*;
 use crate::board::*;
+use crate::log;
 use crate::tools::store::Store;
 use std::collections::HashSet;
 
@@ -29,8 +30,31 @@ impl<'a> ActionDispacher<'a> {
         ActionDispacher { store }
     }
 
-    pub fn change(&mut self, from: Point, to: Point, dry: bool) {
-        self.store.dispatch(Actions::Change(from, to))
+    pub fn change_dry(&mut self, a: Point, b: Point) -> Result<(), ()> {
+        let state = self.store.get_state();
+        let a_block = state.blocks.pick(a);
+
+        if let Some(block) = a_block {
+            return match state.locked.get(&block.id.to_string()) {
+                None => Ok(()),
+                Some(_) => Err(()),
+            };
+        }
+
+        let b_block = state.blocks.pick(b);
+
+        if let Some(block) = b_block {
+            return match state.locked.get(&block.id.to_string()) {
+                None => Ok(()),
+                Some(_) => Err(()),
+            };
+        }
+
+        Ok(())
+    }
+
+    pub fn change(&mut self, a: Point, b: Point) {
+        self.store.dispatch(Actions::Change(a, b))
     }
 
     pub fn unlock(&mut self, points: Vec<Point>) {

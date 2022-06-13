@@ -95,7 +95,6 @@ where
                     if let Some(_) = state.locked.get(&block.id.to_string()) {
                     } else {
                         self.ctx.set_fill_style(&color.into());
-                        self.ctx.rect(x, y, width, height);
                         self.ctx.fill_rect(x, y, width, height);
                         self.ctx.set_fill_style(&"rgb(0,0,0)".into());
                         self.ctx

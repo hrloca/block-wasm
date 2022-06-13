@@ -61,15 +61,20 @@ pub async fn run() {
             let a = board::Point::of(1, 0);
             let b = board::Point::of(0, 0);
 
-            action.lock(vec![a, b]);
-            canvas.draw_particle(ui::ChangeParticle::new(
-                a,
-                b,
-                Box::new(|action, a, b| {
-                    action.change(a, b, false);
-                    action.unlock(vec![a, b]);
-                }),
-            ));
+            match action.change_dry(a, b) {
+                Err(_) => {}
+                Ok(_) => {
+                    action.lock(vec![a, b]);
+                    canvas.draw_particle(ui::ChangeParticle::new(
+                        a,
+                        b,
+                        Box::new(|action, a, b| {
+                            action.change(a, b);
+                            action.unlock(vec![a, b]);
+                        }),
+                    ));
+                }
+            }
         }) as Box<dyn FnMut(_)>);
 
         button

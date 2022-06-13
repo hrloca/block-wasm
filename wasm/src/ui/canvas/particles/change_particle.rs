@@ -23,7 +23,7 @@ impl ChangeParticle {
             a,
             b,
             created: Date::new_0().get_time(),
-            total: 200.0,
+            total: 300.0,
             finished,
         }
     }
@@ -37,7 +37,11 @@ impl ChangeParticle {
     }
 
     fn ease(&self, x: f64) -> f64 {
-        1.0 - ((x * PI) / 2.0).cos()
+        if x < 0.5 {
+            4.0 * x * x * x
+        } else {
+            1.0 - (-2.0 * x + 2.0).powi(3) / 2.0
+        }
     }
 }
 
@@ -77,12 +81,24 @@ impl Particle for ChangeParticle {
         ctx.begin_path();
 
         ctx.set_fill_style(&a_color.into());
-        ctx.rect(a_x, a_y, width_f64, height_f64);
         ctx.fill_rect(a_x, a_y, width_f64, height_f64);
+        ctx.set_fill_style(&"rgb(0,0,0)".into());
+        ctx.fill_text(
+            &a_block.kind.to_string(),
+            a_x + width_f64 / 2.0,
+            a_y + height_f64 / 2.0,
+        )
+        .unwrap();
 
         ctx.set_fill_style(&b_color.into());
-        ctx.rect(b_x, b_y, width_f64, height_f64);
         ctx.fill_rect(b_x, b_y, width_f64, height_f64);
+        ctx.set_fill_style(&"rgb(0,0,0)".into());
+        ctx.fill_text(
+            &b_block.kind.to_string(),
+            b_x + width_f64 / 2.0,
+            b_y + height_f64 / 2.0,
+        )
+        .unwrap();
 
         ctx.stroke();
     }
