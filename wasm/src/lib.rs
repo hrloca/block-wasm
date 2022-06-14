@@ -70,6 +70,42 @@ pub async fn run() {
                     action.move_(from, to);
                 }),
             )));
+
+            let from = board::Point::of(1, 1);
+            let to = board::Point::of(1, 4);
+
+            action.lock(vec![from]);
+            canvas.draw_particle(Box::new(ui::FallParticle::create(
+                from,
+                to,
+                Box::new(|action, from, to| {
+                    action.move_(from, to);
+                }),
+            )));
+
+            let from = board::Point::of(0, 0);
+            let to = board::Point::of(0, 3);
+
+            action.lock(vec![from]);
+            canvas.draw_particle(Box::new(ui::FallParticle::create(
+                from,
+                to,
+                Box::new(|action, from, to| {
+                    action.move_(from, to);
+                }),
+            )));
+
+            let from = board::Point::of(0, 1);
+            let to = board::Point::of(0, 4);
+
+            action.lock(vec![from]);
+            canvas.draw_particle(Box::new(ui::FallParticle::create(
+                from,
+                to,
+                Box::new(|action, from, to| {
+                    action.move_(from, to);
+                }),
+            )));
         }) as Box<dyn FnMut(_)>);
 
         button
@@ -89,14 +125,17 @@ pub async fn run() {
             let mut action = ActionDispacher::new(&mut (*store));
             let mut canvas = canvas_.borrow_mut();
 
-            let a = board::Point::of(1, 1);
+            let a = board::Point::of(0, 2);
             let b = board::Point::of(1, 2);
             let c = board::Point::of(1, 3);
             let d = board::Point::of(0, 3);
+            let e = board::Point::of(0, 4);
+            let f = board::Point::of(1, 4);
+            let g = board::Point::of(2, 4);
 
-            action.lock(vec![a, b, c, d]);
+            action.lock(vec![a, b, c, d, e, f, g]);
             canvas.draw_particle(Box::new(ui::DeleteParticle::create(
-                vec![a, b, c, d],
+                vec![a, b, c, d, e, f, g],
                 Box::new(|action, dels| {
                     action.delete(dels.clone());
                 }),

@@ -5,6 +5,7 @@ impl Easing {
     pub fn ease_in_cubic(x: f64) -> f64 {
         x * x * x
     }
+
     pub fn ease_in_out_cubic(x: f64) -> f64 {
         if x < 0.5 {
             4.0 * x * x * x
