@@ -9,9 +9,9 @@ impl BlockColors {
         BlockColors {
             repos: HashMap::from([
                 (1, String::from("#ff80ab")),
-                (2, String::from("#8c9eff")),
+                (2, String::from("#ffff8d")),
                 (3, String::from("#b9f6ca")),
-                (4, String::from("#ffff8d")),
+                (4, String::from("#8c9eff")),
                 (5, String::from("#ffd180")),
             ]),
         }

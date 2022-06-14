@@ -2,9 +2,11 @@ use crate::store::*;
 use web_sys::*;
 
 mod change_particle;
+mod delete_particle;
 mod fall_particle;
 
 pub use change_particle::*;
+pub use delete_particle::*;
 pub use fall_particle::*;
 
 pub trait Particle {

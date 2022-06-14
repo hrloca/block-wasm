@@ -8,8 +8,8 @@ pub type MoveList = Vec<Move>;
 pub type PointList = Vec<Point>;
 pub type BlockList = Vec<Block>;
 
-pub fn delete(blocks: &BlockBoard, block_list: &BlockList) -> BlockBoard {
-    blocks.update(del(block_list))
+pub fn delete(blocks: &BlockBoard, points: &PointList) -> BlockBoard {
+    blocks.update(bla(points))
 }
 
 pub fn move_to(blocks: &BlockBoard, moves: &Vec<Move>) -> BlockBoard {

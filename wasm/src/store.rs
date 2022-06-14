@@ -13,12 +13,12 @@ pub struct State {
 }
 
 pub enum Actions {
-    Delete,
+    Delete(Vec<Point>),
     Empty(Point),
     Change(Point, Point),
     Lock(Vec<Point>),
     UnLock(Vec<Point>),
-    Fall,
+    Move(Point, Point),
 }
 
 pub struct ActionDispacher<'a> {
@@ -30,31 +30,19 @@ impl<'a> ActionDispacher<'a> {
         ActionDispacher { store }
     }
 
-    pub fn change_dry(&mut self, a: Point, b: Point) -> Result<(), ()> {
-        let state = self.store.get_state();
-        let a_block = state.blocks.pick(a);
-
-        if let Some(block) = a_block {
-            return match state.locked.get(&block.id.to_string()) {
-                None => Ok(()),
-                Some(_) => Err(()),
-            };
-        }
-
-        let b_block = state.blocks.pick(b);
-
-        if let Some(block) = b_block {
-            return match state.locked.get(&block.id.to_string()) {
-                None => Ok(()),
-                Some(_) => Err(()),
-            };
-        }
-
-        Ok(())
+    pub fn change(&mut self, a: Point, b: Point) {
+        self.unlock(vec![a, b]);
+        self.store.dispatch(Actions::Change(a, b))
     }
 
-    pub fn change(&mut self, a: Point, b: Point) {
-        self.store.dispatch(Actions::Change(a, b))
+    pub fn move_(&mut self, from: Point, to: Point) {
+        self.unlock(vec![from]);
+        self.store.dispatch(Actions::Move(from, to))
+    }
+
+    pub fn delete(&mut self, delete: Vec<Point>) {
+        self.unlock(delete.clone());
+        self.store.dispatch(Actions::Delete(delete.clone()))
     }
 
     pub fn unlock(&mut self, points: Vec<Point>) {
@@ -70,7 +58,7 @@ pub fn create_state() -> State {
     State {
         blocks: Board::from(vec![
             vec![Block::a(0, 1), Block::a(1, 2), Block::a(2, 5)],
-            vec![Block::a(3, 2), Block::a(4, 4), Block::a(5, 3)],
+            vec![Block::a(3, 2), Block::a(4, 3), Block::a(5, 4)],
             vec![Block::a(6, 3), Block::a(7, 4), Block::a(8, 2)],
             vec![Block::a(9, 4), Block::a(10, 4), Block::a(11, 1)],
             vec![Block::a(12, 2), Block::a(13, 5), Block::a(14, 1)],
@@ -111,6 +99,14 @@ pub fn reducer(state: &State, types: Actions) -> State {
         }
         Actions::Change(a, b) => State {
             blocks: change(&state.blocks, a, b),
+            ..state.clone()
+        },
+        Actions::Delete(dels) => State {
+            blocks: delete(&state.blocks, &dels),
+            ..state.clone()
+        },
+        Actions::Move(from, to) => State {
+            blocks: move_to(&state.blocks, &vec![Move { from, to }]),
             ..state.clone()
         },
         _ => state.clone(),

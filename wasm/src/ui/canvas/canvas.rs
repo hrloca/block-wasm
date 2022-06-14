@@ -1,25 +1,18 @@
 use super::*;
 use crate::store::*;
 use std::f64;
-use std::rc::Rc;
 use wasm_bindgen::JsCast;
 use web_sys::*;
 
-pub struct Canvas<P>
-where
-    P: Particle,
-{
+pub struct Canvas {
     body: HtmlCanvasElement,
     ctx: CanvasRenderingContext2d,
     ctx_for_particle: CanvasRenderingContext2d,
-    particles: Vec<P>,
+    particles: Vec<Box<dyn Particle>>,
     colors: BlockColors,
 }
 
-impl<P> Canvas<P>
-where
-    P: Particle,
-{
+impl Canvas {
     pub fn create(canvas_element: HtmlCanvasElement) -> Self {
         let ctx = canvas_element.get_context("2d").unwrap().unwrap();
         let ctx = JsCast::dyn_into::<CanvasRenderingContext2d>(ctx).unwrap();
@@ -47,11 +40,11 @@ where
         &self.body
     }
 
-    pub fn get_particles(&self) -> &Vec<P> {
+    pub fn get_particles(&self) -> &Vec<Box<dyn Particle>> {
         &self.particles
     }
 
-    pub fn draw_particle(&mut self, p: P) {
+    pub fn draw_particle(&mut self, p: Box<dyn Particle>) {
         self.particles.push(p);
     }
 
@@ -76,8 +69,6 @@ where
             self.body.width().into(),
             self.body.height().into(),
         );
-
-        self.draw_particles(state, action);
 
         {
             self.ctx.begin_path();
@@ -105,6 +96,8 @@ where
             });
 
             self.ctx.stroke();
+
+            self.draw_particles(state, action);
         }
     }
 }

@@ -18,11 +18,7 @@ mod tests {
 
         let deleted = delete(
             &board,
-            &vec![
-                board.pick(Point::of(0, 0)).unwrap(),
-                board.pick(Point::of(1, 0)).unwrap(),
-                board.pick(Point::of(2, 0)).unwrap(),
-            ],
+            &vec![Point::of(0, 0), Point::of(1, 0), Point::of(1, 0)],
         );
 
         inspect(&deleted);
