@@ -29,8 +29,8 @@ pub async fn run() {
     let mut store = Store::create(create_state(), reducer);
     store.subscribe(Box::new(|state| log!("{:?}", state.locked)));
     let store = rcel(store);
-    let canvas = ui::Canvas::create(JsCast::dyn_into::<HtmlCanvasElement>(h.el("canvas")).unwrap())
-        .initialize();
+    let canvas_el = JsCast::dyn_into::<HtmlCanvasElement>(h.el("canvas")).unwrap();
+    let canvas = ui::Canvas::create(&canvas_el);
     let canvas = rcel(canvas);
 
     {
@@ -42,9 +42,53 @@ pub async fn run() {
             let state = store.get_state();
             let mut action = ActionDispacher::new(&mut (*store));
             let mut canvas = canvas_.borrow_mut();
+
             canvas.render(&state, &mut action);
         }))
         .start();
+    }
+
+    {
+        let store_ = Rc::clone(&store);
+        let canvas_ = Rc::clone(&canvas);
+        let handler = Closure::wrap(Box::new(move |e: MouseEvent| {
+            let mut store = store_.borrow_mut();
+            let state = store.get_state();
+            let mut action = ActionDispacher::new(&mut (*store));
+            let mut canvas = canvas_.borrow_mut();
+
+            let offset_x = e.offset_x();
+            let offset_y = e.offset_y();
+
+            let a = canvas.with_point((offset_x, offset_y));
+            if state.blocks.has(a) {
+                let next = board::Point::of(a.x + 1, a.y);
+                let or_prev = board::Point::of(a.x - 1, a.y);
+                let next = if state.blocks.has(next) {
+                    Some(next)
+                } else if state.blocks.has(or_prev) {
+                    Some(or_prev)
+                } else {
+                    None
+                };
+
+                if let Some(next) = next {
+                    action.lock(vec![a, next]);
+                    canvas.draw_particle(Box::new(ui::ChangeParticle::create(
+                        a,
+                        next,
+                        Box::new(|action, a, b| {
+                            action.change(a, b);
+                        }),
+                    )));
+                }
+            }
+        }) as Box<dyn FnMut(_)>);
+
+        canvas_el
+            .add_event_listener_with_callback("click", handler.as_ref().unchecked_ref())
+            .unwrap();
+        handler.forget();
     }
 
     {
@@ -60,18 +104,6 @@ pub async fn run() {
             let mut canvas = canvas_.borrow_mut();
 
             let from = board::Point::of(1, 0);
-            let to = board::Point::of(1, 3);
-
-            action.lock(vec![from]);
-            canvas.draw_particle(Box::new(ui::FallParticle::create(
-                from,
-                to,
-                Box::new(|action, from, to| {
-                    action.move_(from, to);
-                }),
-            )));
-
-            let from = board::Point::of(1, 1);
             let to = board::Point::of(1, 4);
 
             action.lock(vec![from]);
@@ -84,18 +116,6 @@ pub async fn run() {
             )));
 
             let from = board::Point::of(0, 0);
-            let to = board::Point::of(0, 3);
-
-            action.lock(vec![from]);
-            canvas.draw_particle(Box::new(ui::FallParticle::create(
-                from,
-                to,
-                Box::new(|action, from, to| {
-                    action.move_(from, to);
-                }),
-            )));
-
-            let from = board::Point::of(0, 1);
             let to = board::Point::of(0, 4);
 
             action.lock(vec![from]);
@@ -120,22 +140,26 @@ pub async fn run() {
         let canvas_ = Rc::clone(&canvas);
         let button2 = h.el("button");
         button2.set_text_content(Some("delete"));
-        let handler = Closure::wrap(Box::new(move |_: web_sys::MouseEvent| {
+        let handler = Closure::wrap(Box::new(move |_: MouseEvent| {
             let mut store = store_.borrow_mut();
             let mut action = ActionDispacher::new(&mut (*store));
             let mut canvas = canvas_.borrow_mut();
 
-            let a = board::Point::of(0, 2);
-            let b = board::Point::of(1, 2);
-            let c = board::Point::of(1, 3);
-            let d = board::Point::of(0, 3);
-            let e = board::Point::of(0, 4);
-            let f = board::Point::of(1, 4);
-            let g = board::Point::of(2, 4);
+            let dels = vec![
+                board::Point::of(0, 1),
+                board::Point::of(1, 1),
+                board::Point::of(0, 2),
+                board::Point::of(1, 2),
+                board::Point::of(1, 3),
+                board::Point::of(0, 3),
+                board::Point::of(0, 4),
+                board::Point::of(1, 4),
+                board::Point::of(2, 4),
+            ];
 
-            action.lock(vec![a, b, c, d, e, f, g]);
+            action.lock(dels.clone());
             canvas.draw_particle(Box::new(ui::DeleteParticle::create(
-                vec![a, b, c, d, e, f, g],
+                dels.clone(),
                 Box::new(|action, dels| {
                     action.delete(dels.clone());
                 }),
@@ -148,44 +172,11 @@ pub async fn run() {
 
         handler.forget();
 
-        let store_ = Rc::clone(&store);
-        let canvas_ = Rc::clone(&canvas);
-        let button3 = h.el("button");
-        button3.set_text_content(Some("change"));
-        let handler = Closure::wrap(Box::new(move |_: web_sys::MouseEvent| {
-            let mut store = store_.borrow_mut();
-            let mut action = ActionDispacher::new(&mut (*store));
-            let mut canvas = canvas_.borrow_mut();
-
-            let a = board::Point::of(1, 3);
-            let b = board::Point::of(2, 3);
-
-            action.lock(vec![a, b]);
-            canvas.draw_particle(Box::new(ui::ChangeParticle::create(
-                a,
-                b,
-                Box::new(|action, a, b| {
-                    action.change(a, b);
-                }),
-            )));
-        }) as Box<dyn FnMut(_)>);
-
-        button3
-            .add_event_listener_with_callback("click", handler.as_ref().unchecked_ref())
-            .unwrap();
-
-        handler.forget();
-
-        let canvas_ = Rc::clone(&canvas);
+        let canvas = canvas.borrow_mut();
 
         h.render(h.node(
             &h.el("div"),
-            vec![
-                &button3,
-                &button2,
-                &button,
-                h.node(&h.el("div"), vec![canvas_.borrow_mut().export()]),
-            ],
+            vec![&button2, &button, h.node(&h.el("div"), vec![&canvas_el])],
         ));
     }
 }

@@ -1,43 +1,37 @@
 use super::*;
+use crate::board::*;
+use crate::log;
 use crate::store::*;
 use std::f64;
 use wasm_bindgen::JsCast;
 use web_sys::*;
 
 pub struct Canvas {
-    body: HtmlCanvasElement,
     ctx: CanvasRenderingContext2d,
-    ctx_for_particle: CanvasRenderingContext2d,
     particles: Vec<Box<dyn Particle>>,
-    colors: BlockColors,
+    colors: Colors,
+    width: f64,
+    height: f64,
 }
 
 impl Canvas {
-    pub fn create(canvas_element: HtmlCanvasElement) -> Self {
-        let ctx = canvas_element.get_context("2d").unwrap().unwrap();
+    pub fn create(canvas: &HtmlCanvasElement) -> Self {
+        let ctx = canvas.get_context("2d").unwrap().unwrap();
         let ctx = JsCast::dyn_into::<CanvasRenderingContext2d>(ctx).unwrap();
 
-        let ctx_for_particle = canvas_element.get_context("2d").unwrap().unwrap();
-        let ctx_for_particle =
-            JsCast::dyn_into::<CanvasRenderingContext2d>(ctx_for_particle).unwrap();
+        canvas.set_width(500);
+        canvas.set_height(500);
+
+        let width = canvas.width() as f64;
+        let height = canvas.height() as f64;
 
         Canvas {
-            colors: BlockColors::create(),
-            body: canvas_element,
+            colors: Colors::create(),
             particles: Vec::new(),
-            ctx_for_particle,
             ctx,
+            width,
+            height,
         }
-    }
-
-    pub fn initialize(self) -> Self {
-        self.body.set_width(500);
-        self.body.set_height(500);
-        self
-    }
-
-    pub fn export(&self) -> &HtmlCanvasElement {
-        &self.body
     }
 
     pub fn get_particles(&self) -> &Vec<Box<dyn Particle>> {
@@ -51,7 +45,7 @@ impl Canvas {
     pub fn draw_particles(&mut self, state: &State, action: &mut ActionDispacher) {
         self.particles
             .iter_mut()
-            .for_each(|p| p.draw(&self.ctx_for_particle, state, action));
+            .for_each(|p| p.draw(&self.ctx, state, action));
 
         self.particles.retain_mut(|p| {
             if !p.is_finish() {
@@ -62,19 +56,22 @@ impl Canvas {
         });
     }
 
+    pub fn with_point(&mut self, point: (i32, i32)) -> Point {
+        let width = WIDTH as i32;
+        let height = HEIGHT as i32;
+        let x = point.0 / width;
+        let y = point.1 / height;
+        Point::of(x as usize, y as usize)
+    }
+
     pub fn render(&mut self, state: &State, action: &mut ActionDispacher) {
-        self.ctx.clear_rect(
-            0.0,
-            0.0,
-            self.body.width().into(),
-            self.body.height().into(),
-        );
+        self.ctx.clear_rect(0.0, 0.0, self.width, self.height);
 
         {
             self.ctx.begin_path();
             state.blocks.each(|(point, block)| {
-                let width = 80.0;
-                let height = 80.0;
+                let width = WIDTH;
+                let height = HEIGHT;
                 let x = point.x as f64 * width;
                 let y = point.y as f64 * height;
                 let color = match block {
@@ -85,12 +82,7 @@ impl Canvas {
                 if let Some(block) = block {
                     if let Some(_) = state.locked.get(&block.id.to_string()) {
                     } else {
-                        self.ctx.set_fill_style(&color.into());
-                        self.ctx.fill_rect(x, y, width, height);
-                        self.ctx.set_fill_style(&"rgb(0,0,0)".into());
-                        self.ctx
-                            .fill_text(&block.kind.to_string(), x + width / 2.0, y + height / 2.0)
-                            .unwrap();
+                        BlockShape::create((x, y), color).draw(&self.ctx);
                     }
                 }
             });

@@ -12,13 +12,13 @@ pub struct FallParticle {
     from: Point,
     to: Point,
     finished: Finished,
-    colors: BlockColors,
+    colors: Colors,
 }
 
 impl FallParticle {
     pub fn create(from: Point, to: Point, finished: Finished) -> Self {
         FallParticle {
-            colors: BlockColors::create(),
+            colors: Colors::create(),
             from,
             to,
             created: Date::new_0().get_time(),
@@ -44,18 +44,9 @@ impl FallParticle {
         num.max(max).min(min)
     }
 
-    fn draw_block(
-        &self,
-        ctx: &CanvasRenderingContext2d,
-        from: Point,
-        to: Point,
-        kind: u8,
-        color: &str,
-    ) {
-        let width = 80;
-        let height = 80;
-        let width_f64 = width as f64;
-        let height_f64 = height as f64;
+    fn draw_block(&self, ctx: &CanvasRenderingContext2d, from: Point, to: Point, color: &str) {
+        let width = WIDTH as usize;
+        let height = HEIGHT as usize;
         let from = Point::of(from.x * width, from.y * height);
         let to = Point::of(to.x * width, to.y * height);
 
@@ -63,12 +54,7 @@ impl FallParticle {
 
         let x = from.x as f64 + (to.x as f64 - from.x as f64) * rate;
         let y = from.y as f64 + (to.y as f64 - from.y as f64) * rate;
-
-        ctx.set_fill_style(&color.into());
-        ctx.fill_rect(x, y, width_f64, height_f64);
-        ctx.set_fill_style(&"rgb(0,0,0)".into());
-        ctx.fill_text(&kind.to_string(), x + width_f64 / 2.0, y + height_f64 / 2.0)
-            .unwrap();
+        BlockShape::create((x, y), color).draw(ctx);
     }
 
     fn total(&self) -> f64 {
@@ -84,11 +70,7 @@ impl Particle for FallParticle {
         let block = state.blocks.pick(target_point).unwrap();
         let color = self.colors.get(block.kind);
 
-        ctx.begin_path();
-
-        self.draw_block(ctx, target_point, self.to, block.kind, color);
-
-        ctx.stroke();
+        self.draw_block(ctx, target_point, self.to, color);
     }
 
     fn is_finish(&self) -> bool {

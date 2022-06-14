@@ -1,7 +1,7 @@
-mod block_colors;
+mod block;
 mod canvas;
 mod particles;
 
-pub use block_colors::*;
+pub use block::*;
 pub use canvas::*;
 pub use particles::*;
