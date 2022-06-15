@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
@@ -61,6 +62,7 @@ pub async fn run() {
             let offset_y = e.offset_y();
 
             let a = canvas.with_point((offset_x, offset_y));
+
             if state.blocks.has(a) {
                 let next = board::Point::of(a.x + 1, a.y);
                 let or_prev = board::Point::of(a.x - 1, a.y);
@@ -81,6 +83,9 @@ pub async fn run() {
                             action.change(a, b);
                         }),
                     )));
+
+                    canvas
+                        .draw_particle(Box::new(ui::TouchParticle::create(a, Box::new(|_, _| {}))));
                 }
             }
         }) as Box<dyn FnMut(_)>);
@@ -172,11 +177,24 @@ pub async fn run() {
 
         handler.forget();
 
-        let canvas = canvas.borrow_mut();
-
         h.render(h.node(
             &h.el("div"),
             vec![&button2, &button, h.node(&h.el("div"), vec![&canvas_el])],
         ));
     }
+}
+pub fn uuid() -> String {
+    let mut rng = rand::thread_rng();
+    "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+        .chars()
+        .map(|c| {
+            if c == 'x' {
+                format!("{:x}", (rng.gen::<f64>() * 16.0).floor() as usize)
+            } else if c == 'y' {
+                format!("{:x}", (rng.gen::<f64>() * 4.0).floor() as usize + 8)
+            } else {
+                c.to_string()
+            }
+        })
+        .collect()
 }

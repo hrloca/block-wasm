@@ -4,14 +4,15 @@ mod tests {
 
     #[test]
     fn サイズが取得できる() {
-        let board = Board::init(Size::of(3, 2), 0);
+        let board = Board::init(Size::of(3, 2), |_| 0);
         assert_eq!(board.size().width, 3);
         assert_eq!(board.size().height, 2);
     }
 
     #[test]
     fn ポイントの存在が判定できる() {
-        let board = Board::init(Size::of(3, 3), 0);
+        let board = Board::init(Size::of(3, 3), |_| 0);
+        println!("{:?}", board);
         assert!(board.has(Point::of(0, 0)));
         assert!(board.has(Point::of(2, 2)));
         assert!(!board.has(Point::of(2, 3)));

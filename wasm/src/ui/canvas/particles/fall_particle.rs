@@ -67,7 +67,7 @@ impl Particle for FallParticle {
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State, _: &mut ActionDispacher) {
         let target_point = self.from;
 
-        let block = state.blocks.pick(target_point).unwrap();
+        let block = state.blocks.pick(target_point).as_ref().unwrap();
         let color = self.colors.get(block.kind);
 
         self.draw_block(ctx, target_point, self.to, color);

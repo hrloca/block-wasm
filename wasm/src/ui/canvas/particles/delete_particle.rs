@@ -44,7 +44,7 @@ impl DeleteParticle {
 impl Particle for DeleteParticle {
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State, _: &mut ActionDispacher) {
         self.delete.iter().for_each(|p| {
-            let block = state.blocks.pick(*p).unwrap();
+            let block = state.blocks.pick(*p).as_ref().unwrap();
             let color = self.colors.get(block.kind);
             self.delete_draw(ctx, *p, color);
         });

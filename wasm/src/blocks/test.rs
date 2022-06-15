@@ -1,10 +1,22 @@
+use js_sys::Date;
+
 #[cfg(test)]
 mod tests {
     use super::super::*;
+    use super::*;
 
     #[test]
     fn playground() {
         // #[rustfmt::skip]
+        let board = Board::from(vec![
+            vec![b(1), b(1), b(2)],
+            vec![b(4), b(1), b(6)],
+            vec![b(7), b(8), b(9)],
+        ]);
+
+        let result = extract_group(&board);
+
+        dbg!(result);
     }
 
     #[test]
@@ -42,7 +54,7 @@ mod tests {
             ],
         );
 
-        assert_eq!(moved.pick(Point::of(2, 2)).unwrap().kind, 1);
+        assert_eq!(moved.pick(Point::of(2, 2)).as_ref().unwrap().kind, 1);
     }
 
     #[test]
@@ -56,8 +68,8 @@ mod tests {
 
         let changed = change(&board, Point::of(0, 0), Point::of(2, 2));
 
-        assert_eq!(changed.pick(Point::of(0, 0)).unwrap().kind, 9);
-        assert_eq!(changed.pick(Point::of(2, 2)).unwrap().kind, 1);
+        assert_eq!(changed.pick(Point::of(0, 0)).as_ref().unwrap().kind, 9);
+        assert_eq!(changed.pick(Point::of(2, 2)).as_ref().unwrap().kind, 1);
     }
 
     fn b(kind: u8) -> Option<Block> {

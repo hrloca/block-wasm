@@ -10,10 +10,19 @@ pub struct Board<T> {
 
 impl<T> Board<T>
 where
-    T: Clone + Copy + fmt::Debug,
+    T: Clone + fmt::Debug,
 {
-    pub fn init(size: Size, init: T) -> Self {
-        let body: Vec<Vec<T>> = vec![vec![init; size.width]; size.height];
+    pub fn init(size: Size, init: impl Fn((usize, usize)) -> T) -> Self {
+        let y = size.height;
+        let x = size.width;
+        let mut body = Vec::with_capacity(y);
+        for y in 0..y {
+            body.push(Vec::with_capacity(x));
+            for x in 0..x {
+                body[y].push(init((x, y)));
+            }
+        }
+
         Board { body }
     }
 
@@ -25,25 +34,73 @@ where
         Size::of(self.body[0].len(), self.body.len())
     }
 
-    pub fn has(&self, base: Point) -> bool {
-        let size = self.size();
-        base.y <= size.height - 1 && base.x <= size.width - 1
-    }
-
     pub fn insert(mut self, point: Point, element: T) -> Self {
         self.body[point.y][point.x] = element;
         self
     }
 
+    pub fn has(&self, base: Point) -> bool {
+        let size = self.size();
+        base.y <= size.height - 1 && base.x <= size.width - 1
+    }
+
+    pub fn top(&self, point: Point) -> Option<(Point, &T)> {
+        if point.y == 0 {
+            None
+        } else {
+            let point = Point::of(point.x, point.y - 1);
+            let element = self.pick(point);
+            Some((point, element))
+        }
+    }
+
+    pub fn bottom(&self, point: Point) -> Option<(Point, &T)> {
+        let point = Point::of(point.x, point.y + 1);
+        if self.has(point) {
+            let element = self.pick(point);
+            Some((point, element))
+        } else {
+            None
+        }
+    }
+
+    pub fn left(&self, point: Point) -> Option<(Point, &T)> {
+        if point.x == 0 {
+            None
+        } else {
+            let point = Point::of(point.x - 1, point.y);
+            let element = self.pick(point);
+            Some((point, element))
+        }
+    }
+
+    pub fn right(&self, point: Point) -> Option<(Point, &T)> {
+        let point = Point::of(point.x + 1, point.y);
+        if self.has(point) {
+            let element = self.pick(point);
+            Some((point, element))
+        } else {
+            None
+        }
+    }
+
     // TODO: Should Result Type
     pub fn change(self, a: Point, b: Point) -> Self {
-        let cell_a = self.body[a.y][a.x];
-        let cell_b = self.body[b.y][b.x];
+        let cell_a = self.body[a.y][a.x].clone();
+        let cell_b = self.body[b.y][b.x].clone();
         self.insert(a, cell_b).insert(b, cell_a)
     }
 
     pub fn pick(&self, base: Point) -> &T {
         &self.body[base.y][base.x]
+    }
+
+    pub fn try_pick(&self, base: Point) -> Result<&T, ()> {
+        if self.has(base) {
+            Ok(&self.body[base.y][base.x])
+        } else {
+            Err(())
+        }
     }
 
     pub fn update<F>(&self, f: F) -> Self

@@ -64,10 +64,10 @@ impl Particle for ChangeParticle {
         let a = self.a;
         let b = self.b;
 
-        let a_block = state.blocks.pick(a).unwrap();
+        let a_block = state.blocks.pick(a).as_ref().unwrap();
         let a_color = self.colors.get(a_block.kind);
 
-        let b_block = state.blocks.pick(b).unwrap();
+        let b_block = state.blocks.pick(b).as_ref().unwrap();
         let b_color = self.colors.get(b_block.kind);
 
         self.draw_block(ctx, a, b, a_color);

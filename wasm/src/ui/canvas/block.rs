@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 use web_sys::*;
 
-pub const WIDTH: f64 = 80.0;
-pub const HEIGHT: f64 = 80.0;
+pub const WIDTH: f64 = 50.0;
+pub const HEIGHT: f64 = 50.0;
 
 pub struct BlockShape<'a> {
     origin: (f64, f64),
     color: &'a str,
 }
+
 impl<'a> BlockShape<'a> {
     pub fn create(origin: (f64, f64), color: &'a str) -> Self {
         BlockShape { origin, color }
@@ -35,6 +36,8 @@ impl Colors {
                 (3, String::from("#b9f6ca")),
                 (4, String::from("#8c9eff")),
                 (5, String::from("#ffd180")),
+                (6, String::from("#888888")),
+                (7, String::from("#6a5acd")),
             ]),
         }
     }

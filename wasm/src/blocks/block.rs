@@ -1,18 +1,14 @@
-// use uuid::Uuid;
+use crate::uuid;
 
-#[derive(Eq, PartialEq, Debug, Clone, Copy)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub struct Block {
-    pub id: usize,
+    pub id: String,
     pub kind: u8,
 }
 
 impl Block {
-    pub fn of(kind: u8) -> Block {
-        Block { id: 0, kind }
-    }
-
-    pub fn a(id: usize, kind: u8) -> Option<Block> {
-        Some(Block { id, kind })
+    pub fn of(kind: u8) -> Self {
+        Block { id: uuid(), kind }
     }
 
     pub fn equals(&self, other: &Block) -> bool {
