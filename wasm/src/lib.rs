@@ -83,7 +83,6 @@ pub async fn run() {
                             action.change(a, b);
                         }),
                     )));
-
                     canvas
                         .draw_particle(Box::new(ui::TouchParticle::create(a, Box::new(|_, _| {}))));
                 }
@@ -109,6 +108,18 @@ pub async fn run() {
             let mut canvas = canvas_.borrow_mut();
 
             let from = board::Point::of(1, 0);
+            let to = board::Point::of(1, 3);
+
+            action.lock(vec![from]);
+            canvas.draw_particle(Box::new(ui::FallParticle::create(
+                from,
+                to,
+                Box::new(|action, from, to| {
+                    action.move_(from, to);
+                }),
+            )));
+
+            let from = board::Point::of(1, 1);
             let to = board::Point::of(1, 4);
 
             action.lock(vec![from]);
@@ -152,7 +163,6 @@ pub async fn run() {
 
             let dels = vec![
                 board::Point::of(0, 1),
-                board::Point::of(1, 1),
                 board::Point::of(0, 2),
                 board::Point::of(1, 2),
                 board::Point::of(1, 3),

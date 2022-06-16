@@ -49,12 +49,15 @@ impl TouchParticle {
         let x = origin.x as f64 - (4.0 * rate);
         let y = origin.y as f64 - (4.0 * rate);
 
-        let opacity = 1.0 - (1.0 * rate);
+        let opacity = 0.8 - (0.8 * rate);
         let color = String::from("rgba(255,255,255,") + &opacity.to_string() + ")";
+        let wakucolor = String::from("rgba(150,150,150,") + &opacity.to_string() + ")";
 
         ctx.begin_path();
         ctx.set_fill_style(&color.into());
         ctx.fill_rect(x, y, WIDTH + 8.0 * rate, HEIGHT + 8.0 * rate);
+        ctx.set_stroke_style(&wakucolor.into());
+        ctx.rect(x, y, WIDTH + 8.0 * rate, HEIGHT + 8.0 * rate);
         ctx.stroke();
     }
 }

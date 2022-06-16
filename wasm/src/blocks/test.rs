@@ -1,22 +1,30 @@
-use js_sys::Date;
-
 #[cfg(test)]
 mod tests {
     use super::super::*;
-    use super::*;
 
     #[test]
     fn playground() {
         // #[rustfmt::skip]
         let board = Board::from(vec![
+            vec![b(1), b(1), b(5)],
+            vec![b(1), b(1), b(3)],
             vec![b(1), b(1), b(2)],
-            vec![b(4), b(1), b(6)],
-            vec![b(7), b(8), b(9)],
+            vec![b(1), b(1), b(4)],
         ]);
 
-        let result = extract_group(&board);
+        let (gps, ids, kinds) = scanning(&board);
 
-        dbg!(result);
+        for (gid, kinds) in &kinds {
+            println!("{gid:?} has {kinds:?}");
+        }
+
+        for (id, gid) in &ids {
+            println!("{id:?} has {gid:?}");
+        }
+
+        for (gid, blocks) in &gps {
+            println!("{gid:?} has {blocks:?}");
+        }
     }
 
     #[test]
