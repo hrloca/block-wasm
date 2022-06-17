@@ -28,7 +28,11 @@ pub fn type_of<T>(_: T) -> () {
 pub async fn run() {
     let h = ui::HTML::new();
     let mut store = Store::create(create_state(), reducer);
-    store.subscribe(Box::new(|state| log!("{:?}", state.locked)));
+    store.subscribe(Box::new(|state| {
+        log!("changing: {:?}", state.changing);
+        log!("falling: {:?}", state.falling);
+        log!("deleting: {:?}", state.deleting);
+    }));
     let store = rcel(store);
     let canvas_el = JsCast::dyn_into::<HtmlCanvasElement>(h.el("canvas")).unwrap();
     let canvas = ui::Canvas::create(&canvas_el);
@@ -75,7 +79,7 @@ pub async fn run() {
                 };
 
                 if let Some(next) = next {
-                    action.lock(vec![a, next]);
+                    action.will_change(a, next);
                     canvas.draw_particle(Box::new(ui::ChangeParticle::create(
                         a,
                         next,
@@ -111,12 +115,12 @@ pub async fn run() {
             let (_, moves) = blocks::fall_scanning(&state.blocks);
 
             for (from, to) in moves {
-                action.lock(vec![from]);
+                action.will_fall(from);
                 canvas.draw_particle(Box::new(ui::FallParticle::create(
                     from,
                     to,
                     Box::new(|action, from, to| {
-                        action.move_(from, to);
+                        action.fall(from, to);
                     }),
                 )));
             }
@@ -143,7 +147,7 @@ pub async fn run() {
             let (gps, _, _) = blocks::scanning(&state.blocks);
             let dels = blocks::delete_points(&gps);
 
-            action.lock(dels.clone());
+            action.will_delete(dels.clone());
             canvas.draw_particle(Box::new(ui::DeleteParticle::create(
                 dels.clone(),
                 Box::new(|action, dels| {

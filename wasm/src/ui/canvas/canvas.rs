@@ -80,9 +80,15 @@ impl Canvas {
                 };
 
                 if let Some(block) = block {
-                    if let Some(_) = state.locked.get(&block.id.to_string()) {
+                    if let Some(_) = state.changing.get(&block.id.to_string()) {
                     } else {
-                        BlockShape::create((x, y), color).draw(&self.ctx);
+                        if let Some(_) = state.deleting.get(&block.id.to_string()) {
+                        } else {
+                            if let Some(_) = state.falling.get(&block.id.to_string()) {
+                            } else {
+                                BlockShape::create((x, y), color).draw(&self.ctx);
+                            }
+                        }
                     }
                 }
             });

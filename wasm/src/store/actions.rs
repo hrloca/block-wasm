@@ -2,10 +2,10 @@ use crate::board::*;
 
 pub enum Actions {
     Delete(Vec<Point>),
-    Empty(Point),
+    Deleting(Vec<Point>),
     Change(Point, Point),
-    Lock(Vec<Point>),
-    UnLock(Vec<Point>),
+    Changing(Point, Point),
     Move(Point, Point),
-    Fall,
+    Fall(Point, Point),
+    Falling(Point),
 }
