@@ -46,17 +46,16 @@ mod tests {
     #[test]
     fn 要素を挿入できる() {
         #[rustfmt::skip]
-        let board = Board::from(vec![
+        let mut board = Board::from(vec![
             vec![1, 2, 3],
             vec![4, 5, 6],
             vec![7, 8, 9],
         ]);
 
-        let new = board
-            .insert(Point::of(0, 0), 100)
-            .insert(Point::of(0, 1), 200);
+        board.insert(Point::of(0, 0), 100);
+        board.insert(Point::of(0, 1), 200);
 
-        assert_eq!(*new.pick(Point::of(0, 0)), 100);
-        assert_eq!(*new.pick(Point::of(0, 1)), 200);
+        assert_eq!(*board.pick(Point::of(0, 0)), 100);
+        assert_eq!(*board.pick(Point::of(0, 1)), 200);
     }
 }

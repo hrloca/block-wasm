@@ -11,10 +11,10 @@ pub type MoveList = Vec<Move>;
 pub type PointList = Vec<Point>;
 pub type BlockList = Vec<Block>;
 
-pub const TOTAL_BLOCK_KIND: u8 = 7;
+pub const TOTAL_BLOCK_KIND: u8 = 4;
 pub const BOARD_COL: u8 = 10; // 11
 pub const BOARD_RAW: u8 = 10; // 6
-pub const SHOULD_CONNECT_WITH_DELETE: u8 = 4;
+pub const SHOULD_CONNECT_WITH_DELETE: usize = 3;
 
 pub fn create() -> BlockBoard {
     Board::init(Size::of(BOARD_RAW.into(), BOARD_COL.into()), |_| {
@@ -35,10 +35,70 @@ pub fn change(blocks: &BlockBoard, a: Point, b: Point) -> BlockBoard {
     blocks.update(cp(&vec![Move::of(a, b), Move::of(b, a)]))
 }
 
-/*
- delete_points: [(x, y)];
- score: { kinds: delete_num };
-*/
+pub fn fall(blocks: &BlockBoard) -> BlockBoard {
+    let (next, _) = fall_scanning(&blocks);
+    next
+}
+
+pub fn fall_scanning(blocks: &BlockBoard) -> (BlockBoard, Vec<(Point, Point)>) {
+    let mut next = blocks.clone();
+    let mut fall_set: Vec<(Point, Point)> = vec![];
+    println!("落ち判定 開始-------------");
+    blocks.fold_rev(
+        (&mut next, &mut fall_set),
+        move |(next, fall_set), (point, _)| fall_scanner(fall_set, next, point, point),
+    );
+    println!("終了-------------");
+
+    (next, fall_set)
+}
+
+fn fall_scanner<'a>(
+    fall_set: &'a mut Vec<(Point, Point)>,
+    blocks: &'a mut BlockBoard,
+    from_point: Point,
+    current_point: Point,
+) -> (&'a mut BlockBoard, &'a mut Vec<(Point, Point)>) {
+    let may_from_block = blocks.pick(from_point);
+    let next = blocks.bottom(current_point);
+
+    match may_from_block {
+        Some(from_block) => match next {
+            Some((next_point, may_next_block)) => match may_next_block {
+                Some(_) => {
+                    if from_point == current_point {
+                        return (blocks, fall_set);
+                    }
+                    blocks.insert(current_point, Some(from_block.clone()));
+                    blocks.insert(from_point, None);
+                    let move_to = (from_point, current_point);
+                    fall_set.push(move_to);
+                    println!("[ 確定 ] {:?} が {:?}", from_point, current_point);
+                    (blocks, fall_set)
+                }
+                None => {
+                    println!("[ 下降 ] {:?} を 下({:?}) へ", from_point, next_point);
+                    fall_scanner(fall_set, blocks, from_point, next_point)
+                }
+            },
+            None => {
+                if from_point == current_point {
+                    return (blocks, fall_set);
+                }
+                blocks.insert(current_point, Some(from_block.clone()));
+                blocks.insert(from_point, None);
+                let move_to = (from_point, current_point);
+                fall_set.push(move_to);
+                println!(
+                    "[ 確定 ] ボード下端に到達. {:?} が {:?}",
+                    from_point, current_point
+                );
+                (blocks, fall_set)
+            }
+        },
+        None => (blocks, fall_set),
+    }
+}
 
 pub fn scanning(blocks: &BlockBoard) -> (Groups, GroupIds, Kinds) {
     let groups: HashMap<String, Vec<(String, Point)>> = HashMap::new();
@@ -46,10 +106,30 @@ pub fn scanning(blocks: &BlockBoard) -> (Groups, GroupIds, Kinds) {
     let kinds: HashMap<String, u8> = HashMap::new();
     let mut scan_result = (groups, group_ids, kinds);
     blocks.fold(&mut scan_result, move |acc, (point, _)| {
-        block_scanner(acc, point, blocks)
+        delete_scanner(acc, point, blocks)
     });
 
     scan_result
+}
+
+/*
+ delete_points: [(x, y)];
+ score: { kinds: delete_num };
+*/
+
+pub fn delete_points(gps: &Groups) -> Vec<Point> {
+    let mut delete_points: Vec<Point> = vec![];
+    for (_, blocks) in gps {
+        match blocks.len() {
+            x if x >= SHOULD_CONNECT_WITH_DELETE => {
+                for bl in blocks.iter() {
+                    delete_points.push(bl.1);
+                }
+            }
+            _ => (),
+        }
+    }
+    delete_points
 }
 
 type Groups = HashMap<String, Vec<(String, Point)>>;
@@ -70,7 +150,7 @@ Kinds {
 }
 */
 
-pub fn block_scanner<'a>(
+pub fn delete_scanner<'a>(
     store: &'a mut (Groups, GroupIds, Kinds),
     current: Point,
     blocks: &BlockBoard,
@@ -105,7 +185,7 @@ pub fn block_scanner<'a>(
                         let kind = target_block.kind;
                         store.2.insert(gid.clone(), kind);
                         store.1.insert(target_block.id.clone(), gid);
-                        block_scanner(store, target_point, blocks);
+                        delete_scanner(store, target_point, blocks);
                     }
                 }
                 // -
@@ -126,42 +206,55 @@ pub fn block_scanner<'a>(
 // -------------------------------------
 
 fn del(block_list: &BlockList) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
-    |next, (cur, mayblock)| match mayblock {
+    |mut next, (cur, mayblock)| match mayblock {
         None => next,
         Some(block) => match block_list.iter().find(|b| b.equals(block)) {
             None => next,
-            _ => next.insert(cur, None),
+            _ => {
+                next.insert(cur, None);
+                next
+            }
         },
     }
 }
 
 fn bla(points: &PointList) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
-    |next, (cur, mayblock)| match mayblock {
+    |mut next, (cur, mayblock)| match mayblock {
         None => next,
         Some(_) => match points.iter().find(|x| x.equals(cur)) {
             None => next,
-            _ => next.insert(cur, None),
+            _ => {
+                next.insert(cur, None);
+                next
+            }
         },
     }
 }
 
 fn mov(moves: &MoveList) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
-    |next, (cur, mayblock)| match mayblock {
+    |mut next, (cur, mayblock)| match mayblock {
         None => next,
         Some(_) => match moves.iter().find(|x| x.from == (cur)) {
             None => next,
             Some(x) if has(&next, x.to) => next,
-            Some(x) => next.insert(x.to, mayblock.clone()).insert(x.from, None),
+            Some(x) => {
+                next.insert(x.to, mayblock.clone());
+                next.insert(x.from, None);
+                next
+            }
         },
     }
 }
 
 fn cp(moves: &MoveList) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
-    |next, (cur, mayblock)| match mayblock {
+    |mut next, (cur, mayblock)| match mayblock {
         None => next,
         Some(_) => match moves.iter().find(|x| x.from == (cur)) {
             None => next,
-            Some(x) => next.insert(x.to, mayblock.clone()),
+            Some(x) => {
+                next.insert(x.to, mayblock.clone());
+                next
+            }
         },
     }
 }

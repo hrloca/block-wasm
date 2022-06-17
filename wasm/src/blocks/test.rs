@@ -7,24 +7,15 @@ mod tests {
         // #[rustfmt::skip]
         let board = Board::from(vec![
             vec![b(1), b(1), b(5)],
-            vec![b(1), b(1), b(3)],
-            vec![b(1), b(1), b(2)],
-            vec![b(1), b(1), b(4)],
+            vec![None, b(1), b(3)],
+            vec![None, None, b(2)],
+            vec![None, None, b(2)],
         ]);
 
-        let (gps, ids, kinds) = scanning(&board);
-
-        for (gid, kinds) in &kinds {
-            println!("{gid:?} has {kinds:?}");
-        }
-
-        for (id, gid) in &ids {
-            println!("{id:?} has {gid:?}");
-        }
-
-        for (gid, blocks) in &gps {
-            println!("{gid:?} has {blocks:?}");
-        }
+        inspect(&board);
+        println!("↓",);
+        let (next, moves) = fall_scanning(&board);
+        inspect(&next);
     }
 
     #[test]
@@ -41,7 +32,7 @@ mod tests {
             &vec![Point::of(0, 0), Point::of(1, 0), Point::of(1, 0)],
         );
 
-        inspect(&deleted);
+        // inspect(&deleted);
     }
 
     #[test]

@@ -39,6 +39,10 @@ pub fn reducer(state: &State, types: Actions) -> State {
             blocks: delete(&state.blocks, &dels),
             ..state.clone()
         },
+        Actions::Fall => State {
+            blocks: fall(&state.blocks),
+            ..state.clone()
+        },
         Actions::Move(from, to) => State {
             blocks: move_to(&state.blocks, &vec![Move { from, to }]),
             ..state.clone()

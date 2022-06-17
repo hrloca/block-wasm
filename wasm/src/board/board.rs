@@ -34,9 +34,8 @@ where
         Size::of(self.body[0].len(), self.body.len())
     }
 
-    pub fn insert(mut self, point: Point, element: T) -> Self {
+    pub fn insert(&mut self, point: Point, element: T) {
         self.body[point.y][point.x] = element;
-        self
     }
 
     pub fn has(&self, base: Point) -> bool {
@@ -85,10 +84,12 @@ where
     }
 
     // TODO: Should Result Type
-    pub fn change(self, a: Point, b: Point) -> Self {
+    pub fn change(mut self, a: Point, b: Point) -> Self {
         let cell_a = self.body[a.y][a.x].clone();
         let cell_b = self.body[b.y][b.x].clone();
-        self.insert(a, cell_b).insert(b, cell_a)
+        self.insert(a, cell_b);
+        self.insert(b, cell_a);
+        self
     }
 
     pub fn pick(&self, base: Point) -> &T {
@@ -121,6 +122,26 @@ where
                     f(nested_acc, (Point::of(x, y), element))
                 })
         })
+    }
+
+    pub fn fold_rev<U, F>(&self, init: U, f: F) -> U
+    where
+        F: Fn(U, (Point, &T)) -> U,
+    {
+        self.body
+            .iter()
+            .rev()
+            .enumerate()
+            .fold(init, |acc, (y, row)| {
+                row.iter()
+                    .rev()
+                    .enumerate()
+                    .fold(acc, |nested_acc, (x, element)| {
+                        let y = self.body.len() - y - 1;
+                        let x = row.len() - x - 1;
+                        f(nested_acc, (Point::of(x, y), element))
+                    })
+            })
     }
 
     pub fn map<F>(&self, f: F) -> Board<T>

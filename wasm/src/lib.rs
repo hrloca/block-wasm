@@ -104,44 +104,22 @@ pub async fn run() {
         button.set_text_content(Some("fall"));
         let handler = Closure::wrap(Box::new(move |_: web_sys::MouseEvent| {
             let mut store = store_.borrow_mut();
+            let state = store.get_state();
             let mut action = ActionDispacher::new(&mut (*store));
             let mut canvas = canvas_.borrow_mut();
 
-            let from = board::Point::of(1, 0);
-            let to = board::Point::of(1, 3);
+            let (_, moves) = blocks::fall_scanning(&state.blocks);
 
-            action.lock(vec![from]);
-            canvas.draw_particle(Box::new(ui::FallParticle::create(
-                from,
-                to,
-                Box::new(|action, from, to| {
-                    action.move_(from, to);
-                }),
-            )));
-
-            let from = board::Point::of(1, 1);
-            let to = board::Point::of(1, 4);
-
-            action.lock(vec![from]);
-            canvas.draw_particle(Box::new(ui::FallParticle::create(
-                from,
-                to,
-                Box::new(|action, from, to| {
-                    action.move_(from, to);
-                }),
-            )));
-
-            let from = board::Point::of(0, 0);
-            let to = board::Point::of(0, 4);
-
-            action.lock(vec![from]);
-            canvas.draw_particle(Box::new(ui::FallParticle::create(
-                from,
-                to,
-                Box::new(|action, from, to| {
-                    action.move_(from, to);
-                }),
-            )));
+            for (from, to) in moves {
+                action.lock(vec![from]);
+                canvas.draw_particle(Box::new(ui::FallParticle::create(
+                    from,
+                    to,
+                    Box::new(|action, from, to| {
+                        action.move_(from, to);
+                    }),
+                )));
+            }
         }) as Box<dyn FnMut(_)>);
 
         button
@@ -158,19 +136,12 @@ pub async fn run() {
         button2.set_text_content(Some("delete"));
         let handler = Closure::wrap(Box::new(move |_: MouseEvent| {
             let mut store = store_.borrow_mut();
+            let state = store.get_state();
             let mut action = ActionDispacher::new(&mut (*store));
             let mut canvas = canvas_.borrow_mut();
 
-            let dels = vec![
-                board::Point::of(0, 1),
-                board::Point::of(0, 2),
-                board::Point::of(1, 2),
-                board::Point::of(1, 3),
-                board::Point::of(0, 3),
-                board::Point::of(0, 4),
-                board::Point::of(1, 4),
-                board::Point::of(2, 4),
-            ];
+            let (gps, _, _) = blocks::scanning(&state.blocks);
+            let dels = blocks::delete_points(&gps);
 
             action.lock(dels.clone());
             canvas.draw_particle(Box::new(ui::DeleteParticle::create(

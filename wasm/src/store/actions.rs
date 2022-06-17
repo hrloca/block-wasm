@@ -7,4 +7,5 @@ pub enum Actions {
     Lock(Vec<Point>),
     UnLock(Vec<Point>),
     Move(Point, Point),
+    Fall,
 }

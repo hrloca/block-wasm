@@ -23,6 +23,10 @@ impl<'a> ActionDispacher<'a> {
         self.store.dispatch(Actions::Move(from, to))
     }
 
+    pub fn fall(&mut self) {
+        self.store.dispatch(Actions::Fall);
+    }
+
     pub fn delete(&mut self, delete: Vec<Point>) {
         self.unlock(delete.clone());
         self.store.dispatch(Actions::Delete(delete.clone()))
