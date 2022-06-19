@@ -1,5 +1,3 @@
-use crate::uuid;
-
 #[cfg(test)]
 mod tests {
     use super::super::*;
@@ -8,7 +6,5 @@ mod tests {
     #[test]
     fn playground() {
         // #[rustfmt::skip]
-        let id = uuid();
-        dbg!(id);
     }
 }

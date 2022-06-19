@@ -33,6 +33,7 @@ pub async fn run() {
         log!("falling: {:?}", state.falling);
         log!("deleting: {:?}", state.deleting);
     }));
+
     let store = rcel(store);
     let canvas_el = JsCast::dyn_into::<HtmlCanvasElement>(h.el("canvas")).unwrap();
     let canvas = ui::Canvas::create(&canvas_el);
@@ -70,13 +71,7 @@ pub async fn run() {
             if state.blocks.has(a) {
                 let next = board::Point::of(a.x + 1, a.y);
                 let or_prev = board::Point::of(a.x - 1, a.y);
-                let next = if state.blocks.has(next) {
-                    Some(next)
-                } else if state.blocks.has(or_prev) {
-                    Some(or_prev)
-                } else {
-                    None
-                };
+                let next = state.blocks.within(next).or(state.blocks.within(or_prev));
 
                 if let Some(next) = next {
                     action.will_change(a, next);
@@ -87,6 +82,7 @@ pub async fn run() {
                             action.change(a, b);
                         }),
                     )));
+
                     canvas
                         .draw_particle(Box::new(ui::TouchParticle::create(a, Box::new(|_, _| {}))));
                 }

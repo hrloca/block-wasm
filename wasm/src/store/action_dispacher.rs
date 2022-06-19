@@ -18,7 +18,7 @@ impl<'a> ActionDispacher<'a> {
     }
 
     pub fn change(&mut self, a: Point, b: Point) {
-        self.store.dispatch(Actions::Change(a, b))
+        self.store.dispatch(Actions::Change(a, b));
     }
 
     pub fn move_(&mut self, from: Point, to: Point) {

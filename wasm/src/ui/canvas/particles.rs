@@ -1,3 +1,4 @@
+use super::*;
 use crate::store::*;
 use web_sys::*;
 
@@ -15,4 +16,8 @@ pub trait Particle {
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State, action: &mut ActionDispacher);
     fn finish(&mut self, state: &State, action: &mut ActionDispacher);
     fn is_finish(&self) -> bool;
+
+    // fn then(&self, Box<dyn Particle>);
 }
+
+pub trait ParticleSet: Particle {}

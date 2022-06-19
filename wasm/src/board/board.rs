@@ -43,6 +43,14 @@ where
         base.y <= size.height - 1 && base.x <= size.width - 1
     }
 
+    pub fn within(&self, base: Point) -> Option<Point> {
+        if self.has(base) {
+            Some(base)
+        } else {
+            None
+        }
+    }
+
     pub fn top(&self, point: Point) -> Option<(Point, &T)> {
         if point.y == 0 {
             None

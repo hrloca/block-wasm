@@ -69,6 +69,7 @@ impl Canvas {
 
         {
             self.ctx.begin_path();
+
             state.blocks.each(|(point, block)| {
                 let width = WIDTH;
                 let height = HEIGHT;
@@ -80,15 +81,12 @@ impl Canvas {
                 };
 
                 if let Some(block) = block {
-                    if let Some(_) = state.changing.get(&block.id.to_string()) {
-                    } else {
-                        if let Some(_) = state.deleting.get(&block.id.to_string()) {
-                        } else {
-                            if let Some(_) = state.falling.get(&block.id.to_string()) {
-                            } else {
-                                BlockShape::create((x, y), color).draw(&self.ctx);
-                            }
-                        }
+                    let id = &block.id.to_string();
+                    if state.changing.get(id).is_none()
+                        && state.deleting.get(id).is_none()
+                        && state.falling.get(id).is_none()
+                    {
+                        BlockShape::create((x, y), color).draw(&self.ctx);
                     }
                 }
             });
