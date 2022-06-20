@@ -3,11 +3,13 @@ use crate::board::*;
 use crate::log;
 use crate::store::*;
 use std::f64;
+use std::rc::Rc;
 use wasm_bindgen::JsCast;
 use web_sys::*;
 
 pub struct Canvas {
     ctx: CanvasRenderingContext2d,
+    body: Rc<HtmlCanvasElement>,
     particles: Vec<Box<dyn Particle>>,
     colors: Colors,
     width: f64,
@@ -15,7 +17,7 @@ pub struct Canvas {
 }
 
 impl Canvas {
-    pub fn create(canvas: &HtmlCanvasElement) -> Self {
+    pub fn create(canvas: Rc<HtmlCanvasElement>) -> Self {
         let ctx = canvas.get_context("2d").unwrap().unwrap();
         let ctx = JsCast::dyn_into::<CanvasRenderingContext2d>(ctx).unwrap();
 
@@ -28,6 +30,7 @@ impl Canvas {
         Canvas {
             colors: Colors::create(),
             particles: Vec::new(),
+            body: canvas,
             ctx,
             width,
             height,
@@ -43,17 +46,19 @@ impl Canvas {
     }
 
     pub fn draw_particles(&mut self, state: &State, action: &mut ActionDispacher) {
-        self.particles
-            .iter_mut()
-            .for_each(|p| p.draw(&self.ctx, state, action));
-
-        self.particles.retain_mut(|p| {
-            if !p.is_finish() {
-                return true;
+        self.particles.iter_mut().for_each(|p| {
+            if !p.is_drawed() {
+                p.start(state, action);
             }
-            p.finish(state, action);
-            false
+
+            p.draw(&self.ctx, state, action);
+
+            if p.is_finish() {
+                p.finish(state, action);
+            }
         });
+
+        self.particles.retain_mut(|p| !p.is_finish());
     }
 
     pub fn with_point(&mut self, point: (i32, i32)) -> Point {

@@ -1,4 +1,5 @@
 use crate::dom;
+use crate::log;
 use web_sys::*;
 
 pub struct HTML {
@@ -25,8 +26,17 @@ impl HTML {
     }
 
     pub fn el(&self, name: &str) -> Element {
-        let el = self.document.create_element(name).unwrap();
-        el
+        self.document.create_element(name).unwrap()
+    }
+
+    pub fn get_by_id(&self, name: &str) -> Element {
+        self.document.get_element_by_id(name).unwrap()
+    }
+
+    pub fn ev(&self, name: &str) -> Event {
+        let ev = self.document.create_event("Event").unwrap();
+        ev.init_event(name);
+        ev
     }
 
     pub fn node<'a>(&self, el: &'a Element, childs: Vec<&Element>) -> &'a Element {

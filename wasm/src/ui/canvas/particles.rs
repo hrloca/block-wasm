@@ -15,9 +15,10 @@ pub use touch_particle::*;
 pub trait Particle {
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State, action: &mut ActionDispacher);
     fn finish(&mut self, state: &State, action: &mut ActionDispacher);
+    fn start(&mut self, state: &State, action: &mut ActionDispacher);
     fn is_finish(&self) -> bool;
-
-    // fn then(&self, Box<dyn Particle>);
+    fn is_drawed(&self) -> bool;
+    fn name(&self) -> String;
 }
 
 pub trait ParticleSet: Particle {}

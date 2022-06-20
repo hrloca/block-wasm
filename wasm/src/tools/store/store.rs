@@ -30,9 +30,8 @@ impl<T: Clone, A> Store<T, A> {
     pub fn dispatch(&mut self, action: A) {
         let new_state = (self.reducer)(&self.state, action);
 
-        match &self.cb {
-            None => (),
-            Some(x) => x(&new_state),
+        if let Some(f) = &self.cb {
+            f(&new_state)
         }
 
         self.state = new_state;

@@ -24,9 +24,52 @@ pub fn type_of<T>(_: T) -> () {
     println!("{}", std::any::type_name::<T>());
 }
 
+const CANVAS_NAME: &str = "board";
+
+fn delete(canvas: &mut ui::Canvas, dels: Vec<board::Point>) {
+    canvas.draw_particle(Box::new(ui::DeleteParticle::create(
+        dels.clone(),
+        Box::new(|action, dels| {
+            action.will_delete(dels);
+        }),
+        Box::new(|action, dels| {
+            action.delete(dels);
+        }),
+    )));
+}
+
+fn fall(canvas: &mut ui::Canvas, from: board::Point, to: board::Point) {
+    canvas.draw_particle(Box::new(ui::FallParticle::create(
+        from,
+        to,
+        Box::new(|action, from, _| {
+            action.will_fall(from);
+        }),
+        Box::new(|action, from, to| {
+            action.fall(from, to);
+        }),
+    )));
+}
+
+fn change(canvas: &mut ui::Canvas, a: board::Point, b: board::Point) {
+    canvas.draw_particle(Box::new(ui::ChangeParticle::create(
+        a,
+        b,
+        Box::new(|action, a, b| {
+            action.will_change(a, b);
+        }),
+        Box::new(|action, a, b| {
+            action.change(a, b);
+        }),
+    )));
+
+    canvas.draw_particle(Box::new(ui::TouchParticle::create(a)));
+}
+
 #[wasm_bindgen(start)]
 pub async fn run() {
     let h = ui::HTML::new();
+    let h = Rc::new(h);
     let mut store = Store::create(create_state(), reducer);
     store.subscribe(Box::new(|state| {
         log!("changing: {:?}", state.changing);
@@ -35,10 +78,11 @@ pub async fn run() {
     }));
 
     let store = rcel(store);
-    let canvas_el = JsCast::dyn_into::<HtmlCanvasElement>(h.el("canvas")).unwrap();
-    let canvas = ui::Canvas::create(&canvas_el);
+    let canvas_el = Rc::new(JsCast::dyn_into::<HtmlCanvasElement>(h.el("canvas")).unwrap());
+    canvas_el.set_attribute("id", CANVAS_NAME).unwrap();
+    let canvas_el_ = Rc::clone(&canvas_el);
+    let canvas = ui::Canvas::create(canvas_el_);
     let canvas = rcel(canvas);
-
     {
         let store_ = Rc::clone(&store);
         let canvas_ = Rc::clone(&canvas);
@@ -58,9 +102,8 @@ pub async fn run() {
         let store_ = Rc::clone(&store);
         let canvas_ = Rc::clone(&canvas);
         let handler = Closure::wrap(Box::new(move |e: MouseEvent| {
-            let mut store = store_.borrow_mut();
+            let store = store_.borrow_mut();
             let state = store.get_state();
-            let mut action = ActionDispacher::new(&mut (*store));
             let mut canvas = canvas_.borrow_mut();
 
             let offset_x = e.offset_x();
@@ -70,21 +113,13 @@ pub async fn run() {
 
             if state.blocks.has(a) {
                 let next = board::Point::of(a.x + 1, a.y);
-                let or_prev = board::Point::of(a.x - 1, a.y);
-                let next = state.blocks.within(next).or(state.blocks.within(or_prev));
+                let b = state
+                    .blocks
+                    .within(next)
+                    .or_else(|| Some(board::Point::of(a.x - 1, a.y)));
 
-                if let Some(next) = next {
-                    action.will_change(a, next);
-                    canvas.draw_particle(Box::new(ui::ChangeParticle::create(
-                        a,
-                        next,
-                        Box::new(|action, a, b| {
-                            action.change(a, b);
-                        }),
-                    )));
-
-                    canvas
-                        .draw_particle(Box::new(ui::TouchParticle::create(a, Box::new(|_, _| {}))));
+                if let Some(b) = b {
+                    change(&mut canvas, a, b);
                 }
             }
         }) as Box<dyn FnMut(_)>);
@@ -92,34 +127,59 @@ pub async fn run() {
         canvas_el
             .add_event_listener_with_callback("click", handler.as_ref().unchecked_ref())
             .unwrap();
+
+        handler.forget();
+    }
+
+    {
+        let store_ = Rc::clone(&store);
+        let canvas_ = Rc::clone(&canvas);
+        let handler = Closure::wrap(Box::new(move |_: MouseEvent| {
+            let store = store_.borrow_mut();
+            let state = store.get_state();
+            let mut canvas = canvas_.borrow_mut();
+            let (_, moves) = blocks::fall_scanning(&state.blocks);
+            for (from, to) in moves {
+                fall(&mut canvas, from, to)
+            }
+        }) as Box<dyn FnMut(_)>);
+
+        canvas_el
+            .add_event_listener_with_callback("fall", handler.as_ref().unchecked_ref())
+            .unwrap();
+
+        handler.forget();
+    }
+
+    {
+        let store_ = Rc::clone(&store);
+        let canvas_ = Rc::clone(&canvas);
+        let handler = Closure::wrap(Box::new(move |_: MouseEvent| {
+            let store = store_.borrow_mut();
+            let state = store.get_state();
+            let mut canvas = canvas_.borrow_mut();
+
+            let (gps, _, _) = blocks::scanning(&state.blocks);
+            let dels = blocks::delete_points(&gps);
+            delete(&mut canvas, dels);
+        }) as Box<dyn FnMut(_)>);
+
+        canvas_el
+            .add_event_listener_with_callback("delete", handler.as_ref().unchecked_ref())
+            .unwrap();
+
         handler.forget();
     }
 
     {
         // ---------------------
-        let store_ = Rc::clone(&store);
-        let canvas_ = Rc::clone(&canvas);
-
         let button = h.el("button");
         button.set_text_content(Some("fall"));
+        let event = h.ev("fall");
+        let ht = Rc::clone(&h);
         let handler = Closure::wrap(Box::new(move |_: web_sys::MouseEvent| {
-            let mut store = store_.borrow_mut();
-            let state = store.get_state();
-            let mut action = ActionDispacher::new(&mut (*store));
-            let mut canvas = canvas_.borrow_mut();
-
-            let (_, moves) = blocks::fall_scanning(&state.blocks);
-
-            for (from, to) in moves {
-                action.will_fall(from);
-                canvas.draw_particle(Box::new(ui::FallParticle::create(
-                    from,
-                    to,
-                    Box::new(|action, from, to| {
-                        action.fall(from, to);
-                    }),
-                )));
-            }
+            let canvas_el = ht.get_by_id(CANVAS_NAME);
+            canvas_el.dispatch_event(&event).unwrap();
         }) as Box<dyn FnMut(_)>);
 
         button
@@ -130,26 +190,13 @@ pub async fn run() {
 
         //-------------------
 
-        let store_ = Rc::clone(&store);
-        let canvas_ = Rc::clone(&canvas);
         let button2 = h.el("button");
         button2.set_text_content(Some("delete"));
+        let ht = Rc::clone(&h);
+        let delete_event = h.ev("delete");
         let handler = Closure::wrap(Box::new(move |_: MouseEvent| {
-            let mut store = store_.borrow_mut();
-            let state = store.get_state();
-            let mut action = ActionDispacher::new(&mut (*store));
-            let mut canvas = canvas_.borrow_mut();
-
-            let (gps, _, _) = blocks::scanning(&state.blocks);
-            let dels = blocks::delete_points(&gps);
-
-            action.will_delete(dels.clone());
-            canvas.draw_particle(Box::new(ui::DeleteParticle::create(
-                dels.clone(),
-                Box::new(|action, dels| {
-                    action.delete(dels.clone());
-                }),
-            )));
+            let canvas_el = ht.get_by_id(CANVAS_NAME);
+            canvas_el.dispatch_event(&delete_event).unwrap();
         }) as Box<dyn FnMut(_)>);
 
         button2
@@ -164,6 +211,7 @@ pub async fn run() {
         ));
     }
 }
+
 pub fn uuid() -> String {
     let mut rng = rand::thread_rng();
     "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"

@@ -1,10 +1,8 @@
-use super::super::*;
 use super::*;
 use crate::board::*;
-use crate::log;
 use js_sys::Date;
 
-type Finished = Box<dyn Fn(&mut ActionDispacher, Point, Point)>;
+type CallBack = Box<dyn Fn(&mut ActionDispacher, Point, Point)>;
 
 const G: f64 = 9.80665;
 
@@ -21,13 +19,15 @@ pub struct FallParticle {
     created: f64,
     from: Point,
     to: Point,
-    finished: Finished,
+    finished: CallBack,
     colors: Colors,
     total: f64,
+    start: CallBack,
+    drawed: bool,
 }
 
 impl FallParticle {
-    pub fn create(from: Point, to: Point, finished: Finished) -> Self {
+    pub fn create(from: Point, to: Point, start: CallBack, finished: CallBack) -> Self {
         let width = WIDTH as usize;
         let height = HEIGHT as usize;
         let _from = Point::of(from.x * width, from.y * height);
@@ -43,6 +43,8 @@ impl FallParticle {
             created: Date::new_0().get_time(),
             total,
             finished,
+            start,
+            drawed: false,
         }
     }
 
@@ -67,7 +69,16 @@ impl FallParticle {
 }
 
 impl Particle for FallParticle {
+    fn name(&self) -> String {
+        String::from("fall_particle")
+    }
+    fn is_drawed(&self) -> bool {
+        self.drawed
+    }
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State, _: &mut ActionDispacher) {
+        if !self.drawed {
+            self.drawed = true;
+        }
         let target_point = self.from;
         let block = state.blocks.pick(target_point).as_ref().unwrap();
         let color = self.colors.get(block.kind);
@@ -80,5 +91,8 @@ impl Particle for FallParticle {
 
     fn finish(&mut self, _: &State, action: &mut ActionDispacher) {
         (self.finished)(action, self.from, self.to);
+    }
+    fn start(&mut self, _: &State, action: &mut ActionDispacher) {
+        (self.start)(action, self.from, self.to);
     }
 }

@@ -1,25 +1,22 @@
 use super::super::super::Easing;
-use super::super::*;
 use super::*;
 use crate::board::*;
 use js_sys::Date;
-
-type Finished = Box<dyn Fn(&mut ActionDispacher, Point)>;
 
 pub struct TouchParticle {
     total: f64,
     created: f64,
     target: Point,
-    finished: Finished,
+    drawed: bool,
 }
 
 impl TouchParticle {
-    pub fn create(target: Point, finished: Finished) -> Self {
+    pub fn create(target: Point) -> Self {
         TouchParticle {
             target,
             created: Date::new_0().get_time(),
             total: 300.0,
-            finished,
+            drawed: false,
         }
     }
 
@@ -63,16 +60,25 @@ impl TouchParticle {
 }
 
 impl Particle for TouchParticle {
+    fn name(&self) -> String {
+        String::from("touch_particle")
+    }
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, _: &State, _: &mut ActionDispacher) {
+        if !self.drawed {
+            self.drawed = true;
+        }
         let target = self.target;
         self.draw_particle(ctx, target);
+    }
+    fn is_drawed(&self) -> bool {
+        self.drawed
     }
 
     fn is_finish(&self) -> bool {
         self.elapsed() > self.total
     }
 
-    fn finish(&mut self, _: &State, action: &mut ActionDispacher) {
-        (self.finished)(action, self.target);
-    }
+    fn finish(&mut self, _: &State, _: &mut ActionDispacher) {}
+
+    fn start(&mut self, _: &State, action: &mut ActionDispacher) {}
 }

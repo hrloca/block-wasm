@@ -1,22 +1,23 @@
 use super::super::super::Easing;
-use super::super::*;
 use super::*;
 use crate::board::*;
+use crate::log;
 use js_sys::Date;
 
-type Finished = Box<dyn Fn(&mut ActionDispacher, Point, Point)>;
-
+type CallBack = Box<dyn Fn(&mut ActionDispacher, Point, Point)>;
 pub struct ChangeParticle {
     total: f64,
     created: f64,
     a: Point,
     b: Point,
-    finished: Finished,
+    finished: CallBack,
+    start: CallBack,
     colors: Colors,
+    drawed: bool,
 }
 
 impl ChangeParticle {
-    pub fn create(a: Point, b: Point, finished: Finished) -> ChangeParticle {
+    pub fn create(a: Point, b: Point, start: CallBack, finished: CallBack) -> ChangeParticle {
         ChangeParticle {
             colors: Colors::create(),
             a,
@@ -24,12 +25,14 @@ impl ChangeParticle {
             created: Date::new_0().get_time(),
             total: 300.0,
             finished,
+            start,
+            drawed: false,
         }
     }
 
     fn elapsed(&self) -> f64 {
         let now = Date::new_0().get_time();
-        now - self.created
+        self.clamp(now - self.created, self.total, 0.0)
     }
 
     fn progress(&self) -> f64 {
@@ -60,7 +63,16 @@ impl ChangeParticle {
 }
 
 impl Particle for ChangeParticle {
+    fn name(&self) -> String {
+        String::from("change_particle")
+    }
+    fn is_drawed(&self) -> bool {
+        self.drawed
+    }
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State, _: &mut ActionDispacher) {
+        if !self.drawed {
+            self.drawed = true;
+        }
         let a = self.a;
         let b = self.b;
 
@@ -75,10 +87,14 @@ impl Particle for ChangeParticle {
     }
 
     fn is_finish(&self) -> bool {
-        self.elapsed() > self.total
+        self.elapsed() >= self.total
     }
 
     fn finish(&mut self, _: &State, action: &mut ActionDispacher) {
         (self.finished)(action, self.a, self.b);
+    }
+
+    fn start(&mut self, _: &State, action: &mut ActionDispacher) {
+        (self.start)(action, self.a, self.b);
     }
 }

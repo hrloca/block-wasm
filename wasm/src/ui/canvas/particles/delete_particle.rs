@@ -1,21 +1,22 @@
-use super::super::*;
 use super::*;
 use crate::board::*;
 use js_sys::Date;
 
-type Finished = Box<dyn Fn(&mut ActionDispacher, Vec<Point>)>;
+type CallBack = Box<dyn Fn(&mut ActionDispacher, Vec<Point>)>;
 
 pub struct DeleteParticle {
     total: f64,
     created: f64,
     delete: Vec<Point>,
-    finished: Finished,
+    finished: CallBack,
+    start: CallBack,
     colors: Colors,
     off: bool,
+    drawed: bool,
 }
 
 impl DeleteParticle {
-    pub fn create(delete: Vec<Point>, finished: Finished) -> Self {
+    pub fn create(delete: Vec<Point>, start: CallBack, finished: CallBack) -> Self {
         DeleteParticle {
             colors: Colors::create(),
             off: false,
@@ -23,6 +24,8 @@ impl DeleteParticle {
             created: Date::new_0().get_time(),
             total: 500.0,
             finished,
+            start,
+            drawed: false,
         }
     }
 
@@ -42,7 +45,16 @@ impl DeleteParticle {
 }
 
 impl Particle for DeleteParticle {
+    fn name(&self) -> String {
+        String::from("delete_particle")
+    }
+    fn is_drawed(&self) -> bool {
+        self.drawed
+    }
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State, _: &mut ActionDispacher) {
+        if !self.drawed {
+            self.drawed = true;
+        }
         self.delete.iter().for_each(|p| {
             let block = state.blocks.pick(*p).as_ref().unwrap();
             let color = self.colors.get(block.kind);
@@ -58,5 +70,9 @@ impl Particle for DeleteParticle {
 
     fn finish(&mut self, _: &State, action: &mut ActionDispacher) {
         (self.finished)(action, self.delete.clone());
+    }
+
+    fn start(&mut self, _: &State, action: &mut ActionDispacher) {
+        (self.start)(action, self.delete.clone());
     }
 }
