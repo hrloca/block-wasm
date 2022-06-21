@@ -75,7 +75,7 @@ impl Particle for FallParticle {
     fn is_drawed(&self) -> bool {
         self.drawed
     }
-    fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State, _: &mut ActionDispacher) {
+    fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
         if !self.drawed {
             self.drawed = true;
         }

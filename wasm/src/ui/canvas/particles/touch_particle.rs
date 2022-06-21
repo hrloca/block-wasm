@@ -63,7 +63,7 @@ impl Particle for TouchParticle {
     fn name(&self) -> String {
         String::from("touch_particle")
     }
-    fn draw(&mut self, ctx: &CanvasRenderingContext2d, _: &State, _: &mut ActionDispacher) {
+    fn draw(&mut self, ctx: &CanvasRenderingContext2d, _: &State) {
         if !self.drawed {
             self.drawed = true;
         }
