@@ -12,8 +12,8 @@ pub type PointList = Vec<Point>;
 pub type BlockList = Vec<Block>;
 
 pub const TOTAL_BLOCK_KIND: u8 = 4;
-pub const BOARD_COL: u8 = 3; // 11
-pub const BOARD_RAW: u8 = 3; // 6
+pub const BOARD_COL: u8 = 10; // 11
+pub const BOARD_RAW: u8 = 10; // 6
 pub const SHOULD_CONNECT_WITH_DELETE: usize = 3;
 
 pub fn create() -> BlockBoard {
