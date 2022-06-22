@@ -46,7 +46,7 @@ pub async fn run() {
     {
         let particle = Rc::clone(&particle);
         let store = Rc::clone(&store);
-        FrameEngine::new(Rc::new(move || {
+        FrameEngine::new(Box::new(move || {
             let state = store.get_state();
             field.render(&canvas.ctx, &state);
             particle.render(&canvas.ctx, &state);

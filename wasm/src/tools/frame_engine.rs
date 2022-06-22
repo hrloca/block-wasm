@@ -10,11 +10,11 @@ pub struct FrameEngine {
 }
 
 impl FrameEngine {
-    pub fn new(updater: Rc<dyn Fn() -> ()>) -> FrameEngine {
+    pub fn new(updater: Box<dyn Fn() -> ()>) -> FrameEngine {
         FrameEngine {
             timer_id: Rc::new(RefCell::new(None)),
             is_active: Cell::new(false),
-            update: updater,
+            update: Rc::new(updater),
         }
     }
 
