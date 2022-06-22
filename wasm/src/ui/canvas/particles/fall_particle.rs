@@ -1,8 +1,9 @@
 use super::*;
 use crate::board::*;
+use crate::uuid;
 use js_sys::Date;
 
-type CallBack = Box<dyn Fn(&mut ActionDispacher, Point, Point)>;
+type CallBack = Box<dyn Fn(Point, Point)>;
 
 const G: f64 = 9.80665;
 
@@ -16,7 +17,7 @@ fn elapsed(px: f64) -> f64 {
 }
 
 pub struct FallParticle {
-    created: f64,
+    started: Option<f64>,
     from: Point,
     to: Point,
     finished: CallBack,
@@ -24,6 +25,7 @@ pub struct FallParticle {
     total: f64,
     start: CallBack,
     drawed: bool,
+    id: String,
 }
 
 impl FallParticle {
@@ -37,10 +39,11 @@ impl FallParticle {
         let total = elapsed(distance as f64);
 
         FallParticle {
+            id: uuid(),
             colors: Colors::create(),
             from,
             to,
-            created: Date::new_0().get_time(),
+            started: None,
             total,
             finished,
             start,
@@ -49,8 +52,11 @@ impl FallParticle {
     }
 
     fn elapsed(&self) -> f64 {
-        let now = Date::new_0().get_time();
-        now - self.created
+        if let Some(started) = self.started {
+            let now = Date::new_0().get_time();
+            return now - started;
+        }
+        0.0
     }
 
     fn draw_block(&self, ctx: &CanvasRenderingContext2d, from: Point, _: Point, color: &str) {
@@ -72,12 +78,16 @@ impl Particle for FallParticle {
     fn name(&self) -> String {
         String::from("fall_particle")
     }
+    fn id(&self) -> String {
+        self.id.clone()
+    }
     fn is_drawed(&self) -> bool {
         self.drawed
     }
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
         if !self.drawed {
             self.drawed = true;
+            self.started = Some(Date::new_0().get_time());
         }
         let target_point = self.from;
         let block = state.blocks.pick(target_point).as_ref().unwrap();
@@ -89,10 +99,10 @@ impl Particle for FallParticle {
         self.elapsed() > self.total
     }
 
-    fn finish(&mut self, _: &State, action: &mut ActionDispacher) {
-        (self.finished)(action, self.from, self.to);
+    fn finish(&self, _: &State) {
+        (self.finished)(self.from, self.to);
     }
-    fn start(&mut self, _: &State, action: &mut ActionDispacher) {
-        (self.start)(action, self.from, self.to);
+    fn start(&self, _: &State) {
+        (self.start)(self.from, self.to);
     }
 }

@@ -1,5 +1,9 @@
 use rand::prelude::*;
 
+pub fn type_of<T>(_: T) -> () {
+    println!("{}", std::any::type_name::<T>());
+}
+
 pub fn uuid() -> String {
     let mut rng = rand::thread_rng();
     "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"

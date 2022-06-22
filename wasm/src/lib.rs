@@ -12,6 +12,8 @@ pub mod store;
 pub mod tools;
 pub mod ui;
 
+mod playground;
+
 use libs::*;
 use store::*;
 use tools::frame_engine::FrameEngine;
@@ -21,57 +23,13 @@ pub fn rcel<T>(data: T) -> Rc<RefCell<T>> {
     Rc::new(RefCell::new(data))
 }
 
-pub fn type_of<T>(_: T) -> () {
-    println!("{}", std::any::type_name::<T>());
-}
-
-fn delete(particle: &mut ui::ParticleDrawer, dels: Vec<board::Point>) {
-    particle.draw(Box::new(ui::DeleteParticle::create(
-        dels.clone(),
-        Box::new(|action, dels| {
-            action.will_delete(dels);
-        }),
-        Box::new(|action, dels| {
-            action.delete(dels);
-        }),
-    )));
-}
-
-fn fall(particle: &mut ui::ParticleDrawer, from: board::Point, to: board::Point) {
-    particle.draw(Box::new(ui::FallParticle::create(
-        from,
-        to,
-        Box::new(|action, from, _| {
-            action.will_fall(from);
-        }),
-        Box::new(|action, from, to| {
-            action.fall(from, to);
-        }),
-    )));
-}
-
-fn change(particle: &mut ui::ParticleDrawer, a: board::Point, b: board::Point) {
-    particle.draw(Box::new(ui::ChangeParticle::create(
-        a,
-        b,
-        Box::new(|action, a, b| {
-            action.will_change(a, b);
-        }),
-        Box::new(|action, a, b| {
-            action.change(a, b);
-        }),
-    )));
-
-    particle.draw(Box::new(ui::TouchParticle::create(a)));
-}
-
 #[wasm_bindgen(start)]
 pub async fn run() {
     let mut store = Store::create(create_state(), reducer);
     store.subscribe(Box::new(|state| {
-        log!("changing: {:?}", state.changing);
-        log!("falling: {:?}", state.falling);
-        log!("deleting: {:?}", state.deleting);
+        // log!("changing: {:?}", state.changing);
+        // log!("falling: {:?}", state.falling);
+        // log!("deleting: {:?}", state.deleting);
     }));
 
     let h = ui::HTML::new();
@@ -92,30 +50,25 @@ pub async fn run() {
     );
 
     {
-        let store = Rc::clone(&store);
-        let particle = Rc::clone(&particle);
+        let store_ = Rc::clone(&store);
+        let particle_ = Rc::clone(&particle);
 
         FrameEngine::new(rcel(move || {
-            let mut store = store.borrow_mut();
-            let state = store.get_state();
-            let mut action = ActionDispacher::new(&mut (*store));
-            let mut particle = particle.borrow_mut();
-
+            let state = store_.borrow().get_state();
             field.render(&canvas.ctx, &state);
-            particle.render(&canvas.ctx, &state, &mut action);
-            particle.drop();
+            particle_.borrow_mut().render(&canvas.ctx, &state);
         }))
         .start();
     }
 
     {
-        let store = Rc::clone(&store);
-        let particle = Rc::clone(&particle);
+        let store_ = Rc::clone(&store);
+        let store__ = Rc::clone(&store);
+        let particle_ = Rc::clone(&particle);
 
         let handler = Closure::wrap(Box::new(move |e: MouseEvent| {
-            let store = store.borrow_mut();
-            let state = store.get_state();
-            let mut particle = particle.borrow_mut();
+            let state = store_.borrow().get_state();
+            let mut particle = particle_.borrow_mut();
 
             let offset_x = e.offset_x();
             let offset_y = e.offset_y();
@@ -123,14 +76,25 @@ pub async fn run() {
             let a = ui::Field::point((offset_x, offset_y));
 
             if state.blocks.has(a) {
-                let next = board::Point::of(a.x + 1, a.y);
-                let b = state
-                    .blocks
-                    .within(next)
-                    .or_else(|| Some(board::Point::of(a.x - 1, a.y)));
+                let b = state.blocks.right(a).or(state.blocks.left(a));
+                let st = Rc::clone(&store__);
+                let st2 = Rc::clone(&store__);
+                if let Some((b, _)) = b {
+                    let change_particle = Box::new(ui::ChangeParticle::create(
+                        a,
+                        b,
+                        Box::new(move |a, b| {
+                            let mut s = st.borrow_mut();
+                            ActionDispacher::new(&mut (*s)).will_change(a, b);
+                        }),
+                        Box::new(move |a, b| {
+                            let mut s = st2.borrow_mut();
+                            ActionDispacher::new(&mut (*s)).change(a, b);
+                        }),
+                    ));
 
-                if let Some(b) = b {
-                    change(&mut particle, a, b);
+                    particle.draw(change_particle);
+                    particle.draw(Box::new(ui::TouchParticle::create(a)));
                 }
             }
         }) as Box<dyn FnMut(_)>);
@@ -145,19 +109,34 @@ pub async fn run() {
 
     {
         // ---------------------
-        let store_ = Rc::clone(&store);
         let particle_ = Rc::clone(&particle);
+        let store_ = Rc::clone(&store);
+        let store__ = Rc::clone(&store);
 
         let button = h.el("button");
         button.set_text_content(Some("fall"));
         let handler = Closure::wrap(Box::new(move |_: web_sys::MouseEvent| {
-            let store = store_.borrow_mut();
-            let state = store.get_state();
+            let state = store_.borrow().get_state();
             let mut particle = particle_.borrow_mut();
 
             let (_, moves) = blocks::fall_scanning(&state.blocks);
             for (from, to) in moves {
-                fall(&mut particle, from, to)
+                let st = Rc::clone(&store__);
+                let st2 = Rc::clone(&store__);
+                let fall_particle = Box::new(ui::FallParticle::create(
+                    from,
+                    to,
+                    Box::new(move |from, _| {
+                        let mut s = st.borrow_mut();
+                        ActionDispacher::new(&mut (*s)).will_fall(from);
+                    }),
+                    Box::new(move |from, to| {
+                        let mut s = st2.borrow_mut();
+                        ActionDispacher::new(&mut (*s)).fall(from, to);
+                    }),
+                ));
+
+                particle.draw(fall_particle);
             }
         }) as Box<dyn FnMut(_)>);
 
@@ -169,19 +148,34 @@ pub async fn run() {
 
         //-------------------
 
-        let store_ = Rc::clone(&store);
         let particle_ = Rc::clone(&particle);
+        let store_ = Rc::clone(&store);
+        let store__ = Rc::clone(&store);
 
         let button2 = h.el("button");
         button2.set_text_content(Some("delete"));
         let handler = Closure::wrap(Box::new(move |_: MouseEvent| {
-            let store = store_.borrow_mut();
-            let state = store.get_state();
+            let state = store_.borrow().get_state();
             let mut particle = particle_.borrow_mut();
 
             let (gps, _, _) = blocks::scanning(&state.blocks);
             let dels = blocks::delete_points(&gps);
-            delete(&mut particle, dels);
+            let st = Rc::clone(&store__);
+            let st2 = Rc::clone(&store__);
+
+            let delete_particle = Box::new(ui::DeleteParticle::create(
+                dels.clone(),
+                Box::new(move |dels| {
+                    let mut s = st.borrow_mut();
+                    ActionDispacher::new(&mut (*s)).will_delete(dels);
+                }),
+                Box::new(move |dels| {
+                    let mut s = st2.borrow_mut();
+                    ActionDispacher::new(&mut (*s)).delete(dels);
+                }),
+            ));
+
+            particle.draw(delete_particle);
         }) as Box<dyn FnMut(_)>);
 
         button2
@@ -190,9 +184,14 @@ pub async fn run() {
 
         handler.forget();
 
+        #[rustfmt::skip]
         h.render(h.node(
             &h.el("div"),
-            vec![&button2, &button, h.node(&h.el("div"), vec![&canvas.el])],
+            vec![
+                &button2,
+                &button,
+                h.node(&h.el("div"), vec![&canvas.el])
+            ],
         ));
     }
 }

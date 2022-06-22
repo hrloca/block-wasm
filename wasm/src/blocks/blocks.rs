@@ -1,6 +1,6 @@
 use super::*;
 use crate::uuid;
-use js_sys::Math::random;
+use rand::prelude::*;
 use std::collections::HashMap;
 
 pub type Cell = Option<Block>;
@@ -12,13 +12,14 @@ pub type PointList = Vec<Point>;
 pub type BlockList = Vec<Block>;
 
 pub const TOTAL_BLOCK_KIND: u8 = 4;
-pub const BOARD_COL: u8 = 10; // 11
-pub const BOARD_RAW: u8 = 10; // 6
+pub const BOARD_COL: u8 = 3; // 11
+pub const BOARD_RAW: u8 = 3; // 6
 pub const SHOULD_CONNECT_WITH_DELETE: usize = 3;
 
 pub fn create() -> BlockBoard {
     Board::init(Size::of(BOARD_RAW.into(), BOARD_COL.into()), |_| {
-        let kind = (random() * TOTAL_BLOCK_KIND as f64).ceil();
+        let mut rng = rand::thread_rng();
+        let kind = (rng.gen::<f64>() * TOTAL_BLOCK_KIND as f64).ceil();
         Some(Block::of(kind as u8))
     })
 }

@@ -1,5 +1,7 @@
 use super::*;
+use crate::log;
 use crate::store::*;
+use std::collections::HashMap;
 
 mod change_particle;
 mod delete_particle;
@@ -16,13 +18,10 @@ pub trait Particle {
     fn is_drawed(&self) -> bool;
     fn name(&self) -> String;
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State);
-    fn finish(&mut self, state: &State, action: &mut ActionDispacher);
-    fn start(&mut self, state: &State, action: &mut ActionDispacher);
+    fn finish(&self, state: &State);
+    fn start(&self, state: &State);
+    fn id(&self) -> String;
 }
-
-//
-
-pub trait ParticleSet: Particle {}
 
 pub struct ParticleDrawer {
     particles: Vec<Box<dyn Particle>>,
@@ -32,30 +31,27 @@ impl ParticleDrawer {
     pub fn create() -> Self {
         ParticleDrawer { particles: vec![] }
     }
-    pub fn render(
-        &mut self,
-        ctx: &CanvasRenderingContext2d,
-        state: &State,
-        action: &mut ActionDispacher,
-    ) {
-        self.particles.iter_mut().for_each(|p| {
-            if !p.is_drawed() {
-                p.start(state, action);
-            }
 
+    pub fn render(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
+        self.particles.retain_mut(|p| {
+            if !p.is_drawed() {
+                p.start(state);
+            }
             p.draw(ctx, state);
 
-            if p.is_finish() {
-                p.finish(state, action);
+            if !p.is_finish() {
+                return true;
             }
+            p.finish(state);
+            false
         });
     }
 
-    pub fn draw(&mut self, p: Box<dyn Particle>) {
+    pub fn draw(&mut self, p: Box<dyn Particle>) -> String {
+        let id = p.id();
         self.particles.push(p);
+        id
     }
 
-    pub fn drop(&mut self) {
-        self.particles.retain_mut(|p| !p.is_finish());
-    }
+    pub fn drop(&mut self) {}
 }

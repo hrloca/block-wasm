@@ -1,27 +1,30 @@
 use super::*;
 use crate::board::*;
+use crate::uuid;
 use js_sys::Date;
 
-type CallBack = Box<dyn Fn(&mut ActionDispacher, Vec<Point>)>;
+type CallBack = Box<dyn Fn(Vec<Point>)>;
 
 pub struct DeleteParticle {
     total: f64,
-    created: f64,
+    started: Option<f64>,
     delete: Vec<Point>,
     finished: CallBack,
     start: CallBack,
     colors: Colors,
     off: bool,
     drawed: bool,
+    id: String,
 }
 
 impl DeleteParticle {
     pub fn create(delete: Vec<Point>, start: CallBack, finished: CallBack) -> Self {
         DeleteParticle {
+            id: uuid(),
             colors: Colors::create(),
             off: false,
             delete,
-            created: Date::new_0().get_time(),
+            started: None,
             total: 500.0,
             finished,
             start,
@@ -30,8 +33,11 @@ impl DeleteParticle {
     }
 
     fn elapsed(&self) -> f64 {
-        let now = Date::new_0().get_time();
-        now - self.created
+        if let Some(started) = self.started {
+            let now = Date::new_0().get_time();
+            return now - started;
+        }
+        0.0
     }
 
     fn delete_draw(&self, ctx: &CanvasRenderingContext2d, point: Point, color: &str) {
@@ -48,12 +54,16 @@ impl Particle for DeleteParticle {
     fn name(&self) -> String {
         String::from("delete_particle")
     }
+    fn id(&self) -> String {
+        self.id.clone()
+    }
     fn is_drawed(&self) -> bool {
         self.drawed
     }
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
         if !self.drawed {
             self.drawed = true;
+            self.started = Some(Date::new_0().get_time());
         }
         self.delete.iter().for_each(|p| {
             let block = state.blocks.pick(*p).as_ref().unwrap();
@@ -68,11 +78,11 @@ impl Particle for DeleteParticle {
         self.elapsed() > self.total
     }
 
-    fn finish(&mut self, _: &State, action: &mut ActionDispacher) {
-        (self.finished)(action, self.delete.clone());
+    fn finish(&self, _: &State) {
+        (self.finished)(self.delete.clone());
     }
 
-    fn start(&mut self, _: &State, action: &mut ActionDispacher) {
-        (self.start)(action, self.delete.clone());
+    fn start(&self, _: &State) {
+        (self.start)(self.delete.clone());
     }
 }

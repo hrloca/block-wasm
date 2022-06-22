@@ -1,28 +1,30 @@
 use super::super::super::Easing;
 use super::*;
 use crate::board::*;
-use crate::log;
+use crate::uuid;
 use js_sys::Date;
 
-type CallBack = Box<dyn Fn(&mut ActionDispacher, Point, Point)>;
+type CallBack = Box<dyn Fn(Point, Point)>;
 pub struct ChangeParticle {
     total: f64,
-    created: f64,
+    started: Option<f64>,
     a: Point,
     b: Point,
     finished: CallBack,
     start: CallBack,
     colors: Colors,
     drawed: bool,
+    id: String,
 }
 
 impl ChangeParticle {
     pub fn create(a: Point, b: Point, start: CallBack, finished: CallBack) -> ChangeParticle {
         ChangeParticle {
+            id: uuid(),
             colors: Colors::create(),
             a,
             b,
-            created: Date::new_0().get_time(),
+            started: None,
             total: 300.0,
             finished,
             start,
@@ -31,8 +33,11 @@ impl ChangeParticle {
     }
 
     fn elapsed(&self) -> f64 {
-        let now = Date::new_0().get_time();
-        self.clamp(now - self.created, self.total, 0.0)
+        if let Some(started) = self.started {
+            let now = Date::new_0().get_time();
+            return now - started;
+        }
+        0.0
     }
 
     fn progress(&self) -> f64 {
@@ -66,12 +71,16 @@ impl Particle for ChangeParticle {
     fn name(&self) -> String {
         String::from("change_particle")
     }
+    fn id(&self) -> String {
+        self.id.clone()
+    }
     fn is_drawed(&self) -> bool {
         self.drawed
     }
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
         if !self.drawed {
             self.drawed = true;
+            self.started = Some(Date::new_0().get_time());
         }
         let a = self.a;
         let b = self.b;
@@ -90,11 +99,11 @@ impl Particle for ChangeParticle {
         self.elapsed() >= self.total
     }
 
-    fn finish(&mut self, _: &State, action: &mut ActionDispacher) {
-        (self.finished)(action, self.a, self.b);
+    fn finish(&self, _: &State) {
+        (self.finished)(self.a, self.b);
     }
 
-    fn start(&mut self, _: &State, action: &mut ActionDispacher) {
-        (self.start)(action, self.a, self.b);
+    fn start(&self, _: &State) {
+        (self.start)(self.a, self.b);
     }
 }

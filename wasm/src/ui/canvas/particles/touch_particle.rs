@@ -1,28 +1,34 @@
 use super::super::super::Easing;
 use super::*;
 use crate::board::*;
+use crate::uuid;
 use js_sys::Date;
 
 pub struct TouchParticle {
     total: f64,
-    created: f64,
+    started: Option<f64>,
     target: Point,
     drawed: bool,
+    id: String,
 }
 
 impl TouchParticle {
     pub fn create(target: Point) -> Self {
         TouchParticle {
             target,
-            created: Date::new_0().get_time(),
+            started: None,
             total: 300.0,
             drawed: false,
+            id: uuid(),
         }
     }
 
     fn elapsed(&self) -> f64 {
-        let now = Date::new_0().get_time();
-        now - self.created
+        if let Some(started) = self.started {
+            let now = Date::new_0().get_time();
+            return now - started;
+        }
+        0.0
     }
 
     fn progress(&self) -> f64 {
@@ -63,9 +69,13 @@ impl Particle for TouchParticle {
     fn name(&self) -> String {
         String::from("touch_particle")
     }
+    fn id(&self) -> String {
+        self.id.clone()
+    }
     fn draw(&mut self, ctx: &CanvasRenderingContext2d, _: &State) {
         if !self.drawed {
             self.drawed = true;
+            self.started = Some(Date::new_0().get_time());
         }
         let target = self.target;
         self.draw_particle(ctx, target);
@@ -78,7 +88,7 @@ impl Particle for TouchParticle {
         self.elapsed() > self.total
     }
 
-    fn finish(&mut self, _: &State, _: &mut ActionDispacher) {}
+    fn finish(&self, _: &State) {}
 
-    fn start(&mut self, _: &State, action: &mut ActionDispacher) {}
+    fn start(&self, _: &State) {}
 }
