@@ -3,17 +3,18 @@ use super::*;
 use crate::board::*;
 use crate::uuid;
 use js_sys::Date;
+use std::cell::Cell;
 
 type CallBack = Box<dyn Fn(Point, Point)>;
 pub struct ChangeParticle {
     total: f64,
-    started: Option<f64>,
+    started: Cell<Option<f64>>,
     a: Point,
     b: Point,
     finished: CallBack,
     start: CallBack,
     colors: Colors,
-    drawed: bool,
+    drawed: Cell<bool>,
     id: String,
 }
 
@@ -24,16 +25,16 @@ impl ChangeParticle {
             colors: Colors::create(),
             a,
             b,
-            started: None,
+            started: Cell::new(None),
             total: 300.0,
             finished,
             start,
-            drawed: false,
+            drawed: Cell::new(false),
         }
     }
 
     fn elapsed(&self) -> f64 {
-        if let Some(started) = self.started {
+        if let Some(started) = self.started.get() {
             let now = Date::new_0().get_time();
             return now - started;
         }
@@ -75,12 +76,12 @@ impl Particle for ChangeParticle {
         self.id.clone()
     }
     fn is_drawed(&self) -> bool {
-        self.drawed
+        self.drawed.get()
     }
-    fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
-        if !self.drawed {
-            self.drawed = true;
-            self.started = Some(Date::new_0().get_time());
+    fn draw(&self, ctx: &CanvasRenderingContext2d, state: &State) {
+        if !self.is_drawed() {
+            self.drawed.set(true);
+            self.started.set(Some(Date::new_0().get_time()));
         }
         let a = self.a;
         let b = self.b;

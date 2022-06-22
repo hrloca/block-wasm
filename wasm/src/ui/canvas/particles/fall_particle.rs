@@ -2,6 +2,7 @@ use super::*;
 use crate::board::*;
 use crate::uuid;
 use js_sys::Date;
+use std::cell::Cell;
 
 type CallBack = Box<dyn Fn(Point, Point)>;
 
@@ -17,14 +18,14 @@ fn elapsed(px: f64) -> f64 {
 }
 
 pub struct FallParticle {
-    started: Option<f64>,
+    started: Cell<Option<f64>>,
     from: Point,
     to: Point,
     finished: CallBack,
     colors: Colors,
     total: f64,
     start: CallBack,
-    drawed: bool,
+    drawed: Cell<bool>,
     id: String,
 }
 
@@ -43,16 +44,16 @@ impl FallParticle {
             colors: Colors::create(),
             from,
             to,
-            started: None,
+            started: Cell::new(None),
             total,
             finished,
             start,
-            drawed: false,
+            drawed: Cell::new(false),
         }
     }
 
     fn elapsed(&self) -> f64 {
-        if let Some(started) = self.started {
+        if let Some(started) = self.started.get() {
             let now = Date::new_0().get_time();
             return now - started;
         }
@@ -82,12 +83,12 @@ impl Particle for FallParticle {
         self.id.clone()
     }
     fn is_drawed(&self) -> bool {
-        self.drawed
+        self.drawed.get()
     }
-    fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
-        if !self.drawed {
-            self.drawed = true;
-            self.started = Some(Date::new_0().get_time());
+    fn draw(&self, ctx: &CanvasRenderingContext2d, state: &State) {
+        if !self.drawed.get() {
+            self.drawed.set(true);
+            self.started.set(Some(Date::new_0().get_time()));
         }
         let target_point = self.from;
         let block = state.blocks.pick(target_point).as_ref().unwrap();

@@ -14,7 +14,7 @@ mod tests {
             score: usize,
         }
 
-        let mut store = Store::create(State { score: 0 }, |state, types| match types {
+        let store = Store::create(State { score: 0 }, |state, types| match types {
             ActionTypes::Up => State {
                 score: state.score + 1,
             },
@@ -24,13 +24,14 @@ mod tests {
         });
 
         store.dispatch(ActionTypes::Up);
-        assert_eq!(store.state.score, 1);
+        assert_eq!(store.get_state().score, 1);
 
         store.dispatch(ActionTypes::Up);
-        assert_eq!(store.state.score, 2);
+        assert_eq!(store.get_state().score, 2);
 
         store.dispatch(ActionTypes::Down);
         store.dispatch(ActionTypes::Down);
-        assert_eq!(store.state.score, 0);
+        let state = store.get_state();
+        assert_eq!(store.get_state().score, 0);
     }
 }

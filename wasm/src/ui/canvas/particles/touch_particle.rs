@@ -3,12 +3,13 @@ use super::*;
 use crate::board::*;
 use crate::uuid;
 use js_sys::Date;
+use std::cell::Cell;
 
 pub struct TouchParticle {
     total: f64,
-    started: Option<f64>,
+    started: Cell<Option<f64>>,
     target: Point,
-    drawed: bool,
+    drawed: Cell<bool>,
     id: String,
 }
 
@@ -16,15 +17,15 @@ impl TouchParticle {
     pub fn create(target: Point) -> Self {
         TouchParticle {
             target,
-            started: None,
+            started: Cell::new(None),
             total: 300.0,
-            drawed: false,
+            drawed: Cell::new(false),
             id: uuid(),
         }
     }
 
     fn elapsed(&self) -> f64 {
-        if let Some(started) = self.started {
+        if let Some(started) = self.started.get() {
             let now = Date::new_0().get_time();
             return now - started;
         }
@@ -72,16 +73,16 @@ impl Particle for TouchParticle {
     fn id(&self) -> String {
         self.id.clone()
     }
-    fn draw(&mut self, ctx: &CanvasRenderingContext2d, _: &State) {
-        if !self.drawed {
-            self.drawed = true;
-            self.started = Some(Date::new_0().get_time());
+    fn draw(&self, ctx: &CanvasRenderingContext2d, _: &State) {
+        if !self.drawed.get() {
+            self.drawed.set(true);
+            self.started.set(Some(Date::new_0().get_time()));
         }
         let target = self.target;
         self.draw_particle(ctx, target);
     }
     fn is_drawed(&self) -> bool {
-        self.drawed
+        self.drawed.get()
     }
 
     fn is_finish(&self) -> bool {

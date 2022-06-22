@@ -2,18 +2,19 @@ use super::*;
 use crate::board::*;
 use crate::uuid;
 use js_sys::Date;
+use std::cell::Cell;
 
 type CallBack = Box<dyn Fn(Vec<Point>)>;
 
 pub struct DeleteParticle {
     total: f64,
-    started: Option<f64>,
+    started: Cell<Option<f64>>,
     delete: Vec<Point>,
     finished: CallBack,
     start: CallBack,
     colors: Colors,
-    off: bool,
-    drawed: bool,
+    off: Cell<bool>,
+    drawed: Cell<bool>,
     id: String,
 }
 
@@ -22,18 +23,18 @@ impl DeleteParticle {
         DeleteParticle {
             id: uuid(),
             colors: Colors::create(),
-            off: false,
+            off: Cell::new(false),
             delete,
-            started: None,
+            started: Cell::new(None),
             total: 500.0,
             finished,
             start,
-            drawed: false,
+            drawed: Cell::new(false),
         }
     }
 
     fn elapsed(&self) -> f64 {
-        if let Some(started) = self.started {
+        if let Some(started) = self.started.get() {
             let now = Date::new_0().get_time();
             return now - started;
         }
@@ -44,7 +45,7 @@ impl DeleteParticle {
         let x = point.x as f64 * WIDTH;
         let y = point.y as f64 * HEIGHT;
 
-        if !self.off {
+        if !self.off.get() {
             BlockShape::create((x, y), color).draw(ctx);
         }
     }
@@ -58,12 +59,12 @@ impl Particle for DeleteParticle {
         self.id.clone()
     }
     fn is_drawed(&self) -> bool {
-        self.drawed
+        self.drawed.get()
     }
-    fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
-        if !self.drawed {
-            self.drawed = true;
-            self.started = Some(Date::new_0().get_time());
+    fn draw(&self, ctx: &CanvasRenderingContext2d, state: &State) {
+        if !self.drawed.get() {
+            self.drawed.set(true);
+            self.started.set(Some(Date::new_0().get_time()));
         }
         self.delete.iter().for_each(|p| {
             let block = state.blocks.pick(*p).as_ref().unwrap();
@@ -71,7 +72,7 @@ impl Particle for DeleteParticle {
             self.delete_draw(ctx, *p, color);
         });
 
-        self.off = !self.off;
+        self.off.set(!self.off.get());
     }
 
     fn is_finish(&self) -> bool {

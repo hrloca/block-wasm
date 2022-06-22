@@ -1,6 +1,7 @@
 use super::*;
 use crate::log;
 use crate::store::*;
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 mod change_particle;
@@ -17,23 +18,25 @@ pub trait Particle {
     fn is_finish(&self) -> bool;
     fn is_drawed(&self) -> bool;
     fn name(&self) -> String;
-    fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State);
+    fn draw(&self, ctx: &CanvasRenderingContext2d, state: &State);
     fn finish(&self, state: &State);
     fn start(&self, state: &State);
     fn id(&self) -> String;
 }
 
 pub struct ParticleDrawer {
-    particles: Vec<Box<dyn Particle>>,
+    particles_list: RefCell<Vec<Box<dyn Particle>>>,
 }
 
 impl ParticleDrawer {
     pub fn create() -> Self {
-        ParticleDrawer { particles: vec![] }
+        ParticleDrawer {
+            particles_list: RefCell::new(vec![]),
+        }
     }
 
-    pub fn render(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
-        self.particles.retain_mut(|p| {
+    pub fn render(&self, ctx: &CanvasRenderingContext2d, state: &State) {
+        self.particles_list.borrow_mut().retain_mut(|p| {
             if !p.is_drawed() {
                 p.start(state);
             }
@@ -47,9 +50,9 @@ impl ParticleDrawer {
         });
     }
 
-    pub fn draw(&mut self, p: Box<dyn Particle>) -> String {
+    pub fn draw(&self, p: Box<dyn Particle>) -> String {
         let id = p.id();
-        self.particles.push(p);
+        self.particles_list.borrow_mut().push(p);
         id
     }
 
