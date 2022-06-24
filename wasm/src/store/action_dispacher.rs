@@ -40,4 +40,12 @@ impl<'a> ActionDispacher<'a> {
     pub fn delete(&'a self, delete: Vec<Point>) {
         self.store.dispatch(Actions::Delete(delete.clone()))
     }
+
+    pub fn delete_complete(&'a self, id: u64) {
+        self.store.dispatch(Actions::DeleteCompleteTask(id))
+    }
+
+    pub fn add_complete(&'a self, id: u64) {
+        self.store.dispatch(Actions::AddCompleteTask(id))
+    }
 }

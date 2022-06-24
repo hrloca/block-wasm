@@ -38,7 +38,9 @@ impl Field {
         Point::of(x as usize, y as usize)
     }
 
-    pub fn render(&self, ctx: &CanvasRenderingContext2d, state: &State) {
+    pub fn render(&self, context: &crate::Ctx) {
+        let ctx = context.canvas_ctx;
+        let state = context.state;
         ctx.clear_rect(0.0, 0.0, self.width, self.height);
 
         {

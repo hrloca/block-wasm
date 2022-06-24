@@ -8,4 +8,5 @@ pub struct State {
     pub deleting: HashSet<String>,
     pub falling: HashSet<String>,
     pub blocks: Board<Option<Block>>,
+    pub complete_tasks: Vec<u64>,
 }

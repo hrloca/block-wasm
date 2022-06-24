@@ -8,5 +8,6 @@ pub fn create_state() -> State {
         changing: HashSet::new(),
         deleting: HashSet::new(),
         falling: HashSet::new(),
+        complete_tasks: Vec::new(),
     }
 }

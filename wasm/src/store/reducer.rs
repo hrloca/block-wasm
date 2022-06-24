@@ -90,6 +90,26 @@ pub fn reducer(state: &State, types: Actions) -> State {
                 ..state.clone()
             }
         }
+
+        Actions::AddCompleteTask(id) => {
+            let mut next = state.complete_tasks.clone();
+            next.push(id);
+
+            State {
+                complete_tasks: next,
+                ..state.clone()
+            }
+        }
+
+        Actions::DeleteCompleteTask(id) => {
+            let mut next = state.complete_tasks.clone();
+            next.retain(|&x| x != id);
+            State {
+                complete_tasks: next,
+                ..state.clone()
+            }
+        }
+
         _ => state.clone(),
     }
 }

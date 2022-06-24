@@ -8,4 +8,6 @@ pub enum Actions {
     Move(Point, Point),
     Fall(Point, Point),
     Falling(Point),
+    DeleteCompleteTask(u64),
+    AddCompleteTask(u64),
 }

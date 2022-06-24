@@ -15,3 +15,7 @@ pub fn uuid() -> String {
         })
         .collect()
 }
+
+pub fn clamp(num: f64, min: f64, max: f64) -> f64 {
+    num.max(max).min(min)
+}

@@ -1,5 +1,6 @@
 // https://easings.net/ja
 
+pub type Ease = fn(x: f64) -> f64;
 pub struct Easing;
 impl Easing {
     pub fn ease_in_cubic(x: f64) -> f64 {

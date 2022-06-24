@@ -3,11 +3,11 @@ use web_sys::*;
 
 mod block;
 mod field;
-mod particles;
+mod particle;
 
 pub use block::*;
 pub use field::*;
-pub use particles::*;
+pub use particle::*;
 
 const CANVAS_NAME: &str = "board";
 
