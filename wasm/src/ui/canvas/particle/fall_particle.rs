@@ -14,13 +14,13 @@ fn elapsed(px: f64) -> f64 {
     (2.0 * h / G).sqrt() * 1000.0
 }
 
-pub struct NewFallParticle {
+pub struct FallParticle {
     pub core: ParticleCore,
     from: Point,
     to: Point,
 }
 
-impl NewFallParticle {
+impl FallParticle {
     pub fn create(from: Point, to: Point) -> Self {
         let width = WIDTH as usize;
         let height = HEIGHT as usize;
@@ -30,7 +30,7 @@ impl NewFallParticle {
         let distance = _to.y - _from.y;
         let total = elapsed(distance as f64);
 
-        NewFallParticle {
+        FallParticle {
             from,
             to,
             core: ParticleCore::create(total),
@@ -52,8 +52,10 @@ impl NewFallParticle {
     }
 }
 
-impl ParticleEntity for NewFallParticle {
-    fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
+impl ParticleEntity for FallParticle {
+    fn draw(&mut self, context: &crate::Ctx) {
+        let ctx = context.canvas_ctx;
+        let state = context.state;
         let colors = Colors::create();
         if !self.core.is_enter() {
             self.core.start_at(Date::new_0().get_time());
@@ -71,5 +73,13 @@ impl ParticleEntity for NewFallParticle {
 
     fn is_started(&self) -> bool {
         self.core.is_enter()
+    }
+
+    fn complete(&self, context: &crate::Ctx) {
+        context.action_dispacher.fall(self.from, self.to);
+    }
+
+    fn started(&self, context: &crate::Ctx) {
+        context.action_dispacher.will_fall(self.from);
     }
 }

@@ -1,17 +1,16 @@
 use super::super::super::Easing;
 use super::*;
-use crate::board::*;
 use js_sys::Date;
 
-pub struct NewChangeParticle {
+pub struct ChangeParticle {
     pub core: ParticleCore,
     a: Point,
     b: Point,
 }
 
-impl NewChangeParticle {
+impl ChangeParticle {
     pub fn create(a: Point, b: Point) -> Self {
-        NewChangeParticle {
+        ChangeParticle {
             a,
             b,
             core: ParticleCore::create(300.),
@@ -33,8 +32,10 @@ impl NewChangeParticle {
     }
 }
 
-impl ParticleEntity for NewChangeParticle {
-    fn draw(&mut self, ctx: &CanvasRenderingContext2d, state: &State) {
+impl ParticleEntity for ChangeParticle {
+    fn draw(&mut self, context: &crate::Ctx) {
+        let ctx = context.canvas_ctx;
+        let state = context.state;
         let colors = Colors::create();
         if !self.core.is_enter() {
             self.core.start_at(Date::new_0().get_time());
@@ -59,5 +60,13 @@ impl ParticleEntity for NewChangeParticle {
 
     fn is_started(&self) -> bool {
         self.core.is_enter()
+    }
+
+    fn complete(&self, context: &crate::Ctx) {
+        context.action_dispacher.change(self.a, self.b);
+    }
+
+    fn started(&self, context: &crate::Ctx) {
+        context.action_dispacher.will_change(self.a, self.b);
     }
 }

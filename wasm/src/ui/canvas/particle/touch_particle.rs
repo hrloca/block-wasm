@@ -1,16 +1,15 @@
 use super::super::super::Easing;
 use super::*;
-use crate::board::*;
 use js_sys::Date;
 
-pub struct NewTouchParticle {
+pub struct TouchParticle {
     pub core: ParticleCore,
     target: Point,
 }
 
-impl NewTouchParticle {
+impl TouchParticle {
     pub fn create(target: Point) -> Self {
-        NewTouchParticle {
+        TouchParticle {
             target,
             core: ParticleCore::create(200.),
         }
@@ -38,8 +37,10 @@ impl NewTouchParticle {
     }
 }
 
-impl ParticleEntity for NewTouchParticle {
-    fn draw(&mut self, ctx: &CanvasRenderingContext2d, _: &State) {
+impl ParticleEntity for TouchParticle {
+    fn draw(&mut self, context: &crate::Ctx) {
+        let ctx = context.canvas_ctx;
+        let state = context.state;
         if !self.core.is_enter() {
             self.core.start_at(Date::new_0().get_time());
         }
@@ -54,4 +55,7 @@ impl ParticleEntity for NewTouchParticle {
     fn is_started(&self) -> bool {
         self.core.is_enter()
     }
+
+    fn complete(&self, _: &crate::Ctx) {}
+    fn started(&self, _: &crate::Ctx) {}
 }
