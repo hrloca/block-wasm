@@ -90,8 +90,14 @@ pub async fn run() {
                 let b = state.blocks.right(a).or(state.blocks.left(a));
                 if let Some((b, _)) = b {
                     let mut scheduler = scheduler.borrow_mut();
-                    let first =
-                        scheduler.register(Box::new(move |_| Some(ui::Particles::Change(a, b))));
+                    let first = scheduler.register(Box::new(move |_| {
+                        let mut rng = rand::thread_rng();
+                        Some(ui::Particles::Change(
+                            board::Point::of(rng.gen_range(0, 10), rng.gen_range(0, 10)),
+                            board::Point::of(rng.gen_range(0, 10), rng.gen_range(0, 10)),
+                            rng.gen_range(100., 1000.),
+                        ))
+                    }));
 
                     let second = scheduler.then(
                         first,
@@ -100,14 +106,12 @@ pub async fn run() {
                             Some(ui::Particles::Change(
                                 board::Point::of(rng.gen_range(0, 10), rng.gen_range(0, 10)),
                                 board::Point::of(rng.gen_range(0, 10), rng.gen_range(0, 10)),
+                                rng.gen_range(100., 1000.),
                             ))
                         }),
                     );
 
-                    let third = scheduler
-                        .then(second, Box::new(move |_| Some(ui::Particles::Change(a, b))));
-
-                    scheduler.jump(third, second);
+                    scheduler.jump(second, first);
 
                     store.dispatch(store::Actions::AddCompleteTask(scheduler.run(first)));
                 };

@@ -3,15 +3,7 @@ use js_sys::Date;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-thread_local!(static PARTICLE_ID: Rc<RefCell<u64>> = Rc::new(RefCell::new(0)));
-
-pub fn get_particle_id() -> Rc<RefCell<u64>> {
-    PARTICLE_ID.with(|rc| *rc.borrow_mut() += 1);
-    PARTICLE_ID.with(|rc| rc.clone())
-}
-
 pub struct ParticleCore {
-    pub id: u64,
     total_time: f64,
     start_time: Option<f64>,
 }
@@ -19,7 +11,6 @@ pub struct ParticleCore {
 impl ParticleCore {
     pub fn create(total_time: f64) -> Self {
         ParticleCore {
-            id: *get_particle_id().borrow_mut(),
             total_time,
             start_time: None,
         }

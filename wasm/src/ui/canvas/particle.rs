@@ -25,7 +25,7 @@ pub trait ParticleEntity {
 }
 
 pub enum Particles {
-    Change(Point, Point),
+    Change(Point, Point, f64),
     Touch(Point),
     Delete(Vec<Point>),
     Fall(Point, Point),
@@ -96,7 +96,7 @@ impl ParticleRender {
 
 pub fn matcher(ps: Particles) -> Box<dyn ParticleEntity> {
     match ps {
-        Particles::Change(a, b) => Box::new(ChangeParticle::create(a, b)),
+        Particles::Change(a, b, dur) => Box::new(ChangeParticle::create(a, b, dur)),
         Particles::Touch(target) => Box::new(TouchParticle::create(target)),
         Particles::Delete(dels) => Box::new(DeleteParticle::create(dels)),
         Particles::Fall(a, b) => Box::new(FallParticle::create(a, b)),

@@ -9,11 +9,11 @@ pub struct ChangeParticle {
 }
 
 impl ChangeParticle {
-    pub fn create(a: Point, b: Point) -> Self {
+    pub fn create(a: Point, b: Point, dur: f64) -> Self {
         ChangeParticle {
             a,
             b,
-            core: ParticleCore::create(300.),
+            core: ParticleCore::create(dur),
         }
     }
 
