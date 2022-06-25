@@ -50,7 +50,7 @@ pub async fn run() {
     let particle_render = Rc::new(RefCell::new(ui::ParticleRender::create()));
     let pr = Rc::clone(&particle_render);
 
-    let ts = Rc::new(RefCell::new(ui::TaskScheduler::<ui::Particles>::create(
+    let scheduler = Rc::new(RefCell::new(ui::TaskScheduler::<ui::Particles>::create(
         Box::new(move |task_id, task| {
             pr.borrow_mut().dispatch_with(task_id, task);
         }),
@@ -58,8 +58,8 @@ pub async fn run() {
 
     {
         let store = Rc::clone(&store);
-        let pr = Rc::clone(&particle_render);
-        let ts = Rc::clone(&ts);
+        let prender = Rc::clone(&particle_render);
+        let scheduler = Rc::clone(&scheduler);
 
         FrameEngine::new(Box::new(move || {
             let state = &store.get_state();
@@ -71,15 +71,15 @@ pub async fn run() {
             };
 
             field.render(&ctx);
-            pr.borrow_mut().render(&ctx);
-            ts.borrow_mut().exec(&state.complete_tasks, &ctx);
+            prender.borrow_mut().render(&ctx);
+            scheduler.borrow_mut().exec(&state.complete_tasks, &ctx);
         }))
         .start();
     }
 
     {
         let store = Rc::clone(&store);
-        let ts = Rc::clone(&ts);
+        let scheduler = Rc::clone(&scheduler);
         let handler = Closure::wrap(Box::new(move |e: MouseEvent| {
             let offset_x = e.offset_x();
             let offset_y = e.offset_y();
@@ -89,32 +89,27 @@ pub async fn run() {
             if state.blocks.has(a) {
                 let b = state.blocks.right(a).or(state.blocks.left(a));
                 if let Some((b, _)) = b {
-                    let first = ts
-                        .borrow_mut()
-                        .register(Box::new(move |_| Some(ui::Particles::Change(a, b))));
+                    let mut scheduler = scheduler.borrow_mut();
+                    let first =
+                        scheduler.register(Box::new(move |_| Some(ui::Particles::Change(a, b))));
 
-                    let second = ts.borrow_mut().then(
+                    let second = scheduler.then(
                         first,
                         Box::new(move |_| {
                             let mut rng = rand::thread_rng();
-                            if rng.gen::<f64>() > 0.5 {
-                                Some(ui::Particles::Change(
-                                    board::Point::of(0, 0),
-                                    board::Point::of(1, 0),
-                                ))
-                            } else {
-                                None
-                            }
+                            Some(ui::Particles::Change(
+                                board::Point::of(rng.gen_range(0, 10), rng.gen_range(0, 10)),
+                                board::Point::of(rng.gen_range(0, 10), rng.gen_range(0, 10)),
+                            ))
                         }),
                     );
 
-                    let third = ts
-                        .borrow_mut()
+                    let third = scheduler
                         .then(second, Box::new(move |_| Some(ui::Particles::Change(a, b))));
 
-                    ts.borrow_mut().jump(third, second);
+                    scheduler.jump(third, second);
 
-                    store.dispatch(store::Actions::AddCompleteTask(ts.borrow_mut().run(first)));
+                    store.dispatch(store::Actions::AddCompleteTask(scheduler.run(first)));
                 };
             }
         }) as Box<dyn FnMut(_)>);

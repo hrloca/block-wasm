@@ -70,17 +70,16 @@ impl ParticleRender {
             }
 
             p.draw(context);
-
-            if p.is_complete() {
-                p.complete(context);
-            }
         });
     }
 
-    fn drop(&mut self, _: &crate::Ctx) -> Vec<u64> {
+    fn drop(&mut self, context: &crate::Ctx) -> Vec<u64> {
         self.task_pool
             .drain_filter(|id| {
                 let p = self.pool.get(id).expect("パーティクルが登録されていない");
+                if p.is_complete() {
+                    p.complete(context);
+                }
                 p.is_complete()
             })
             .collect()
