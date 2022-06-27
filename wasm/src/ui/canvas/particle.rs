@@ -24,19 +24,28 @@ pub trait ParticleEntity {
     fn started(&self, context: &crate::Ctx);
 }
 
-pub enum Particles {
-    Change(Point, Point, f64),
+pub enum ParticleAction {
+    Change(Point, Point),
     Touch(Point),
     Delete(Vec<Point>),
     Fall(Point, Point),
 }
 
+type Particle = Box<dyn ParticleEntity>;
+type ParticleGropup = Vec<Particle>;
+
+enum Particles {
+    Simgle(Particle),
+    Multi(ParticleGropup),
+}
+
 type ParticlePool = HashMap<u64, Box<dyn ParticleEntity>>;
-type ParticleIdPool = Vec<u64>;
+
+type TaskIdPool = Vec<u64>;
 
 pub struct ParticleRender {
     pool: ParticlePool,
-    task_pool: ParticleIdPool,
+    task_pool: TaskIdPool,
 }
 
 impl ParticleRender {
@@ -47,12 +56,12 @@ impl ParticleRender {
         }
     }
 
-    pub fn dispatch(&mut self, p: Particles) {
+    pub fn dispatch(&mut self, p: ParticleAction) {
         let task_id = *issue_task_id().borrow_mut();
         self.dispatch_with(task_id, p);
     }
 
-    pub fn dispatch_with(&mut self, task_id: u64, p: Particles) {
+    pub fn dispatch_with(&mut self, task_id: u64, p: ParticleAction) {
         let particle = matcher(p);
         self.task_pool.push(task_id);
         self.pool.insert(task_id, particle);
@@ -94,11 +103,11 @@ impl ParticleRender {
     }
 }
 
-pub fn matcher(ps: Particles) -> Box<dyn ParticleEntity> {
+fn matcher(ps: ParticleAction) -> Box<dyn ParticleEntity> {
     match ps {
-        Particles::Change(a, b, dur) => Box::new(ChangeParticle::create(a, b, dur)),
-        Particles::Touch(target) => Box::new(TouchParticle::create(target)),
-        Particles::Delete(dels) => Box::new(DeleteParticle::create(dels)),
-        Particles::Fall(a, b) => Box::new(FallParticle::create(a, b)),
+        ParticleAction::Change(a, b) => Box::new(ChangeParticle::create(a, b)),
+        ParticleAction::Touch(target) => Box::new(TouchParticle::create(target)),
+        ParticleAction::Delete(dels) => Box::new(DeleteParticle::create(dels)),
+        ParticleAction::Fall(a, b) => Box::new(FallParticle::create(a, b)),
     }
 }

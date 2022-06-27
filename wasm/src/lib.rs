@@ -50,11 +50,11 @@ pub async fn run() {
     let particle_render = Rc::new(RefCell::new(ui::ParticleRender::create()));
     let pr = Rc::clone(&particle_render);
 
-    let scheduler = Rc::new(RefCell::new(ui::TaskScheduler::<ui::Particles>::create(
-        Box::new(move |task_id, task| {
+    let scheduler = Rc::new(RefCell::new(
+        ui::TaskScheduler::<ui::ParticleAction>::create(Box::new(move |task_id, task| {
             pr.borrow_mut().dispatch_with(task_id, task);
-        }),
-    )));
+        })),
+    ));
 
     {
         let store = Rc::clone(&store);
@@ -90,28 +90,22 @@ pub async fn run() {
                 let b = state.blocks.right(a).or(state.blocks.left(a));
                 if let Some((b, _)) = b {
                     let mut scheduler = scheduler.borrow_mut();
-                    let first = scheduler.register(Box::new(move |_| {
-                        let mut rng = rand::thread_rng();
-                        Some(ui::Particles::Change(
-                            board::Point::of(rng.gen_range(0, 10), rng.gen_range(0, 10)),
-                            board::Point::of(rng.gen_range(0, 10), rng.gen_range(0, 10)),
-                            rng.gen_range(100., 1000.),
-                        ))
-                    }));
+                    let first = scheduler
+                        .register(Box::new(move |_| Some(ui::ParticleAction::Change(a, b))));
 
                     let second = scheduler.then(
                         first,
-                        Box::new(move |_| {
-                            let mut rng = rand::thread_rng();
-                            Some(ui::Particles::Change(
-                                board::Point::of(rng.gen_range(0, 10), rng.gen_range(0, 10)),
-                                board::Point::of(rng.gen_range(0, 10), rng.gen_range(0, 10)),
-                                rng.gen_range(100., 1000.),
-                            ))
+                        Box::new(move |ctx| {
+                            let state = ctx.state;
+                            let (gps, _, _) = blocks::scanning(&state.blocks);
+                            let dels = blocks::delete_points(&gps);
+                            if dels.is_empty() {
+                                None
+                            } else {
+                                Some(ui::ParticleAction::Delete(dels))
+                            }
                         }),
                     );
-
-                    scheduler.jump(second, first);
 
                     store.dispatch(store::Actions::AddCompleteTask(scheduler.run(first)));
                 };

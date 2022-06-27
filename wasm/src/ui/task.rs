@@ -38,7 +38,7 @@ impl<T> TaskScheduler<T> {
         task_id
     }
 
-    pub fn jump(&mut self, from: u64, to: u64) {
+    pub fn connect(&mut self, from: u64, to: u64) {
         self.relation.insert(from, to);
     }
 
@@ -48,6 +48,7 @@ impl<T> TaskScheduler<T> {
         v_task_id
     }
 
+    // TODO: delete task gabege.
     pub fn exec(&self, completed: &Vec<u64>, ctx: &crate::Ctx) {
         for comp_id in completed.iter() {
             if let Some(next_task_id) = self.relation.get(&comp_id) {
