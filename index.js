@@ -1,3 +1,3 @@
-const wasm = import("./wasm/pkg");
+const wasm = import("./pkg");
 
 wasm.then((w) => {});
