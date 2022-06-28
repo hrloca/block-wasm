@@ -10,12 +10,12 @@ mod tests {
     }
 
     #[test]
-    fn ポイントの存在が判定できる() {
+    fn ポイントのがboardの有効範囲内かどうか判定できる() {
         let board = Board::init(Size::of(3, 3), |_| 0);
         println!("{:?}", board);
-        assert!(board.has(Point::of(0, 0)));
-        assert!(board.has(Point::of(2, 2)));
-        assert!(!board.has(Point::of(2, 3)));
+        assert!(board.is_valid(Point::of(0, 0)));
+        assert!(board.is_valid(Point::of(2, 2)));
+        assert!(!board.is_valid(Point::of(2, 3)));
     }
 
     #[test]

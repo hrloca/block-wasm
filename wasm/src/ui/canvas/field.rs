@@ -18,8 +18,8 @@ impl Field {
         block_width: f64,
         block_height: f64,
     ) -> Self {
-        let width = block_width * row as f64;
-        let height = block_height * col as f64;
+        let width = block_width * col as f64;
+        let height = block_height * row as f64;
         canvas.set_width(width as u32);
         canvas.set_height(height as u32);
 
@@ -30,7 +30,7 @@ impl Field {
         }
     }
 
-    pub fn point(point: (i32, i32)) -> Point {
+    pub fn offset_to_point(point: (i32, i32)) -> Point {
         let width = WIDTH as i32;
         let height = HEIGHT as i32;
         let x = point.0 / width;

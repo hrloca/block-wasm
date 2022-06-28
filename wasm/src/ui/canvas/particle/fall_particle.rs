@@ -18,6 +18,7 @@ pub struct FallParticle {
     pub core: ParticleCore,
     from: Point,
     to: Point,
+    completed: bool,
 }
 
 impl FallParticle {
@@ -34,6 +35,7 @@ impl FallParticle {
             from,
             to,
             core: ParticleCore::create(total),
+            completed: false,
         }
     }
 
@@ -54,6 +56,9 @@ impl FallParticle {
 
 impl ParticleEntity for FallParticle {
     fn draw(&mut self, context: &crate::Ctx) {
+        if self.completed {
+            return;
+        }
         let ctx = context.canvas_ctx;
         let state = context.state;
         let colors = Colors::create();
@@ -62,13 +67,21 @@ impl ParticleEntity for FallParticle {
         }
 
         let target_point = self.from;
-        let block = state.blocks.pick(target_point).as_ref().unwrap();
-        let color = colors.get(block.kind);
-        self.draw_block(ctx, target_point, self.to, color);
+        if let Some(block) = state.blocks.pick(target_point) {
+            let color = colors.get(block.kind);
+            self.draw_block(ctx, target_point, self.to, color);
+        }
+        if self.is_complete() {
+            self.completed = true;
+        }
     }
 
     fn is_complete(&self) -> bool {
         self.core.is_exit()
+    }
+
+    fn is_completed(&self) -> bool {
+        self.completed
     }
 
     fn is_started(&self) -> bool {
@@ -80,6 +93,6 @@ impl ParticleEntity for FallParticle {
     }
 
     fn started(&self, context: &crate::Ctx) {
-        context.action_dispacher.will_fall(self.from);
+        context.action_dispacher.will_fall(self.from, self.to);
     }
 }

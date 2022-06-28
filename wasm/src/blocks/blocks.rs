@@ -1,7 +1,7 @@
 use super::*;
 use crate::uuid;
 use rand::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub type Cell = Option<Block>;
 pub type BlockBoard = Board<Cell>;
@@ -11,17 +11,86 @@ pub type MoveList = Vec<Move>;
 pub type PointList = Vec<Point>;
 pub type BlockList = Vec<Block>;
 
-pub const TOTAL_BLOCK_KIND: u8 = 4;
+pub const TOTAL_BLOCK_KIND: u8 = 6; // 6
 pub const BOARD_COL: u8 = 10; // 11
-pub const BOARD_RAW: u8 = 10; // 6
-pub const SHOULD_CONNECT_WITH_DELETE: usize = 3;
+pub const BOARD_RAW: u8 = 6; // 6
+pub const SHOULD_CONNECT_WITH_DELETE: usize = 4;
 
 pub fn create() -> BlockBoard {
-    Board::init(Size::of(BOARD_RAW.into(), BOARD_COL.into()), |_| {
+    let blocks = Board::init(Size::of(BOARD_RAW.into(), BOARD_COL.into()), |_| {
         let mut rng = rand::thread_rng();
         let kind = (rng.gen::<f64>() * TOTAL_BLOCK_KIND as f64).ceil();
-        Some(Block::of(kind as u8))
-    })
+
+        if rng.gen::<f64>() > 0.5 {
+            Some(Block::of(kind as u8))
+        } else {
+            Some(Block::of(kind as u8))
+        }
+    });
+
+    // TODO: ランダムではなく、埋める
+    let (gps, _, _) = scanning(&blocks);
+    let dels = delete_points(&gps);
+
+    if dels.is_empty() {
+        return blocks;
+    } else {
+        create()
+    }
+}
+
+pub fn valid(blocks: &BlockBoard, point: Point) -> Option<&Block> {
+    blocks.valid(point).and_then(|p| blocks.pick(p).as_ref())
+}
+
+pub fn has_block(blocks: &BlockBoard, point: Point) -> Option<Point> {
+    blocks.valid(point).and_then(|point| exist(blocks, point))
+}
+
+pub fn should_change(blocks: &BlockBoard, a: Point) -> Option<(Point, Point)> {
+    blocks
+        .valid(a)
+        .and_then(|a| blocks.right(a).or(blocks.left(a)))
+        .and_then(|b| {
+            if exist(blocks, a).or(exist(blocks, b)).is_some() {
+                Some((a, b))
+            } else {
+                None
+            }
+        })
+}
+
+pub fn should_changed(
+    blocks: &BlockBoard,
+    a: Point,
+    ignore_points: Vec<Point>,
+) -> Option<(Point, Point)> {
+    if let Some((a, b)) = should_change(blocks, a) {
+        return if ignore_points.contains(&a) || ignore_points.contains(&b) {
+            None
+        } else {
+            Some((a, b))
+        };
+    }
+    None
+}
+
+pub fn should_not_change(blocks: &BlockBoard, ignore_points: Vec<Point>) -> Vec<Point> {
+    let size = blocks.size();
+    let should_not_changes = HashSet::new();
+
+    ignore_points
+        .iter()
+        .fold(should_not_changes, |mut acc, cur| {
+            let x = cur.x;
+            let height = size.height - 1;
+            for y in cur.y..height {
+                acc.insert(Point::of(x, y));
+            }
+            acc
+        })
+        .into_iter()
+        .collect()
 }
 
 pub fn delete(blocks: &BlockBoard, points: &PointList) -> BlockBoard {
@@ -44,6 +113,7 @@ pub fn fall(blocks: &BlockBoard) -> BlockBoard {
 pub fn fall_scanning(blocks: &BlockBoard) -> (BlockBoard, Vec<(Point, Point)>) {
     let mut next = blocks.clone();
     let mut fall_set: Vec<(Point, Point)> = vec![];
+
     println!("落ち判定 開始-------------");
     blocks.fold_rev(
         (&mut next, &mut fall_set),
@@ -65,7 +135,7 @@ fn fall_scanner<'a>(
 
     match may_from_block {
         Some(from_block) => match next {
-            Some((next_point, may_next_block)) => match may_next_block {
+            Some(next_point) => match exist(blocks, next_point) {
                 Some(_) => {
                     if from_point == current_point {
                         return (blocks, fall_set);
@@ -162,10 +232,9 @@ pub fn delete_scanner<'a>(
     let left = blocks.left(current);
     let right = blocks.right(current);
 
-    let mut scan = |block: &Block, target: Option<(Point, &Option<Block>)>| {
-        if let Some((target_point, may_target_block)) = target {
-            if let Some(target_block) = may_target_block {
-                // -
+    let mut scan = |block: &Block, target: Option<Point>| {
+        if let Some(target_point) = target {
+            if let Some(target_block) = valid(blocks, target_point) {
                 if block.same_kinds(target_block) {
                     if let None = store.1.get(&target_block.id) {
                         let gid = match store.1.get(&block.id) {
@@ -174,6 +243,7 @@ pub fn delete_scanner<'a>(
                         };
 
                         let data = (target_block.id.clone(), target_point);
+
                         match store.0.get_mut(&gid) {
                             Some(blocks) => {
                                 blocks.push(data);
@@ -189,7 +259,6 @@ pub fn delete_scanner<'a>(
                         delete_scanner(store, target_point, blocks);
                     }
                 }
-                // -
             };
         }
     };
@@ -248,15 +317,15 @@ fn mov(moves: &MoveList) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> Bloc
 }
 
 fn cp(moves: &MoveList) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
-    |mut next, (cur, mayblock)| match mayblock {
-        None => next,
-        Some(_) => match moves.iter().find(|x| x.from == (cur)) {
+    |mut next, (cur, mayblock)| {
+        //
+        match moves.iter().find(|x| x.from == (cur)) {
             None => next,
             Some(x) => {
                 next.insert(x.to, mayblock.clone());
                 next
             }
-        },
+        }
     }
 }
 
@@ -267,20 +336,18 @@ fn has(blocks: &BlockBoard, point: Point) -> bool {
     }
 }
 
+pub fn exist(blocks: &BlockBoard, point: Point) -> Option<Point> {
+    match blocks.pick(point) {
+        None => None,
+        Some(_) => Some(point),
+    }
+}
+
 pub fn inspect(blocks: &BlockBoard) {
     blocks.inspect(|(_, cell)| match cell {
         None => print!("{:^10}", "-"),
         Some(x) => print!("{:^10}", x.kind),
     });
-}
-
-pub fn synthesize(
-    pros: &Vec<Builder>,
-) -> impl Fn(BlockBoard, (Point, &Option<Block>)) -> BlockBoard + '_ {
-    |next, (point, mayblock)| {
-        pros.iter()
-            .fold(next, |acc, cur| cur(acc, (point, mayblock)))
-    }
 }
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy)]

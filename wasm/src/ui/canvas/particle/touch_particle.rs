@@ -5,6 +5,7 @@ use js_sys::Date;
 pub struct TouchParticle {
     pub core: ParticleCore,
     target: Point,
+    completed: bool,
 }
 
 impl TouchParticle {
@@ -12,6 +13,7 @@ impl TouchParticle {
         TouchParticle {
             target,
             core: ParticleCore::create(200.),
+            completed: false,
         }
     }
 
@@ -39,6 +41,9 @@ impl TouchParticle {
 
 impl ParticleEntity for TouchParticle {
     fn draw(&mut self, context: &crate::Ctx) {
+        if self.completed {
+            return;
+        }
         let ctx = context.canvas_ctx;
         let state = context.state;
         if !self.core.is_enter() {
@@ -46,10 +51,17 @@ impl ParticleEntity for TouchParticle {
         }
 
         self.draw_particle(ctx, self.target);
+        if self.is_complete() {
+            self.completed = true;
+        }
     }
 
     fn is_complete(&self) -> bool {
         self.core.is_exit()
+    }
+
+    fn is_completed(&self) -> bool {
+        self.completed
     }
 
     fn is_started(&self) -> bool {

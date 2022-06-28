@@ -5,6 +5,7 @@ pub struct DeleteParticle {
     pub core: ParticleCore,
     delete: Vec<Point>,
     on: bool,
+    completed: bool,
 }
 
 impl DeleteParticle {
@@ -13,6 +14,7 @@ impl DeleteParticle {
             delete,
             on: false,
             core: ParticleCore::create(500.),
+            completed: false,
         }
     }
 
@@ -28,6 +30,9 @@ impl DeleteParticle {
 
 impl ParticleEntity for DeleteParticle {
     fn draw(&mut self, context: &crate::Ctx) {
+        if self.completed {
+            return;
+        }
         let ctx = context.canvas_ctx;
         let state = context.state;
         let colors = Colors::create();
@@ -36,16 +41,25 @@ impl ParticleEntity for DeleteParticle {
         }
 
         self.delete.iter().for_each(|p| {
-            let block = state.blocks.pick(*p).as_ref().unwrap();
-            let color = colors.get(block.kind);
-            self.delete_draw(ctx, *p, color);
+            if let Some(block) = state.blocks.pick(*p) {
+                let color = colors.get(block.kind);
+                self.delete_draw(ctx, *p, color);
+            }
         });
 
         self.on = !self.on;
+
+        if self.is_complete() {
+            self.completed = true;
+        }
     }
 
     fn is_complete(&self) -> bool {
         self.core.is_exit()
+    }
+
+    fn is_completed(&self) -> bool {
+        self.completed
     }
 
     fn is_started(&self) -> bool {

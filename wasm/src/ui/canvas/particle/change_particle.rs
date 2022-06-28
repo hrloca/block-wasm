@@ -6,6 +6,7 @@ pub struct ChangeParticle {
     pub core: ParticleCore,
     a: Point,
     b: Point,
+    completed: bool,
 }
 
 impl ChangeParticle {
@@ -13,7 +14,8 @@ impl ChangeParticle {
         ChangeParticle {
             a,
             b,
-            core: ParticleCore::create(300.),
+            core: ParticleCore::create(180.),
+            completed: false,
         }
     }
 
@@ -34,6 +36,10 @@ impl ChangeParticle {
 
 impl ParticleEntity for ChangeParticle {
     fn draw(&mut self, context: &crate::Ctx) {
+        if self.completed {
+            return;
+        }
+
         let ctx = context.canvas_ctx;
         let state = context.state;
         let colors = Colors::create();
@@ -44,18 +50,27 @@ impl ParticleEntity for ChangeParticle {
         let a = self.a;
         let b = self.b;
 
-        let a_block = state.blocks.pick(a).as_ref().unwrap();
-        let a_color = colors.get(a_block.kind);
+        if let Some(block) = state.blocks.pick(a).as_ref() {
+            let a_color = colors.get(block.kind);
+            self.draw_block(ctx, a, b, a_color);
+        };
 
-        let b_block = state.blocks.pick(b).as_ref().unwrap();
-        let b_color = colors.get(b_block.kind);
+        if let Some(block) = state.blocks.pick(b).as_ref() {
+            let b_color = colors.get(block.kind);
+            self.draw_block(ctx, b, a, b_color);
+        };
 
-        self.draw_block(ctx, a, b, a_color);
-        self.draw_block(ctx, b, a, b_color);
+        if self.is_complete() {
+            self.completed = true;
+        }
     }
 
     fn is_complete(&self) -> bool {
         self.core.is_exit()
+    }
+
+    fn is_completed(&self) -> bool {
+        self.completed
     }
 
     fn is_started(&self) -> bool {

@@ -20,6 +20,7 @@ pub trait ParticleEntity {
     fn draw(&mut self, context: &crate::Ctx);
     fn is_complete(&self) -> bool;
     fn is_started(&self) -> bool;
+    fn is_completed(&self) -> bool;
     fn complete(&self, context: &crate::Ctx);
     fn started(&self, context: &crate::Ctx);
 }
@@ -28,7 +29,7 @@ pub enum ParticleAction {
     Change(Point, Point),
     Touch(Point),
     Delete(Vec<Point>),
-    Fall(Point, Point),
+    Fall(Vec<(Point, Point)>),
 }
 
 type Particle = Box<dyn ParticleEntity>;
@@ -39,7 +40,7 @@ enum Particles {
     Multi(ParticleGropup),
 }
 
-type ParticlePool = HashMap<u64, Box<dyn ParticleEntity>>;
+type ParticlePool = HashMap<u64, Particles>;
 
 type TaskIdPool = Vec<u64>;
 
@@ -74,22 +75,42 @@ impl ParticleRender {
                 .get_mut(task_id)
                 .expect("パーティクルが登録されていない");
 
-            if !p.is_started() {
-                p.started(context);
-            }
+            match p {
+                Particles::Multi(x) => {
+                    for x in x.iter_mut() {
+                        if !x.is_started() {
+                            x.started(context);
+                        }
+                        x.draw(context);
+                        if x.is_complete() {
+                            x.complete(context);
+                        }
+                    }
+                }
+                Particles::Simgle(x) => {
+                    if !x.is_started() {
+                        x.started(context);
+                    }
 
-            p.draw(context);
+                    x.draw(context);
+
+                    if x.is_complete() {
+                        x.complete(context);
+                    }
+                }
+            }
         });
     }
 
-    fn drop(&mut self, context: &crate::Ctx) -> Vec<u64> {
+    fn drop(&mut self, _: &crate::Ctx) -> Vec<u64> {
         self.task_pool
             .drain_filter(|id| {
                 let p = self.pool.get(id).expect("パーティクルが登録されていない");
-                if p.is_complete() {
-                    p.complete(context);
+
+                match p {
+                    Particles::Multi(x) => x.iter().all(|x| x.is_complete()),
+                    Particles::Simgle(x) => x.is_complete(),
                 }
-                p.is_complete()
             })
             .collect()
     }
@@ -103,11 +124,18 @@ impl ParticleRender {
     }
 }
 
-fn matcher(ps: ParticleAction) -> Box<dyn ParticleEntity> {
+fn matcher(ps: ParticleAction) -> Particles {
     match ps {
-        ParticleAction::Change(a, b) => Box::new(ChangeParticle::create(a, b)),
-        ParticleAction::Touch(target) => Box::new(TouchParticle::create(target)),
-        ParticleAction::Delete(dels) => Box::new(DeleteParticle::create(dels)),
-        ParticleAction::Fall(a, b) => Box::new(FallParticle::create(a, b)),
+        ParticleAction::Change(a, b) => Particles::Simgle(Box::new(ChangeParticle::create(a, b))),
+        ParticleAction::Touch(target) => Particles::Simgle(Box::new(TouchParticle::create(target))),
+        ParticleAction::Delete(dels) => Particles::Simgle(Box::new(DeleteParticle::create(dels))),
+        ParticleAction::Fall(falls) => {
+            let pg: ParticleGropup = vec![];
+            let pg = falls.iter().fold(pg, |mut acc, (from, to)| {
+                acc.push(Box::new(FallParticle::create(*from, *to)));
+                acc
+            });
+            Particles::Multi(pg)
+        }
     }
 }

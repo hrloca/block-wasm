@@ -38,57 +38,41 @@ where
         self.body[point.y][point.x] = element;
     }
 
-    pub fn has(&self, base: Point) -> bool {
+    pub fn is_valid(&self, base: Point) -> bool {
         let size = self.size();
         base.y <= size.height - 1 && base.x <= size.width - 1
     }
 
-    pub fn within(&self, base: Point) -> Option<Point> {
-        if self.has(base) {
+    pub fn valid(&self, base: Point) -> Option<Point> {
+        if self.is_valid(base) {
             Some(base)
         } else {
             None
         }
     }
 
-    pub fn top(&self, point: Point) -> Option<(Point, &T)> {
+    pub fn top(&self, point: Point) -> Option<Point> {
         if point.y == 0 {
             None
         } else {
-            let point = Point::of(point.x, point.y - 1);
-            let element = self.pick(point);
-            Some((point, element))
+            self.valid(Point::of(point.x, point.y - 1))
         }
     }
 
-    pub fn bottom(&self, point: Point) -> Option<(Point, &T)> {
-        let point = Point::of(point.x, point.y + 1);
-        if self.has(point) {
-            let element = self.pick(point);
-            Some((point, element))
-        } else {
-            None
-        }
+    pub fn bottom(&self, point: Point) -> Option<Point> {
+        self.valid(Point::of(point.x, point.y + 1))
     }
 
-    pub fn left(&self, point: Point) -> Option<(Point, &T)> {
+    pub fn left(&self, point: Point) -> Option<Point> {
         if point.x == 0 {
             None
         } else {
-            let point = Point::of(point.x - 1, point.y);
-            let element = self.pick(point);
-            Some((point, element))
+            self.valid(Point::of(point.x - 1, point.y))
         }
     }
 
-    pub fn right(&self, point: Point) -> Option<(Point, &T)> {
-        let point = Point::of(point.x + 1, point.y);
-        if self.has(point) {
-            let element = self.pick(point);
-            Some((point, element))
-        } else {
-            None
-        }
+    pub fn right(&self, point: Point) -> Option<Point> {
+        self.valid(Point::of(point.x + 1, point.y))
     }
 
     // TODO: Should Result Type
@@ -105,7 +89,7 @@ where
     }
 
     pub fn try_pick(&self, base: Point) -> Result<&T, ()> {
-        if self.has(base) {
+        if self.is_valid(base) {
             Ok(&self.body[base.y][base.x])
         } else {
             Err(())

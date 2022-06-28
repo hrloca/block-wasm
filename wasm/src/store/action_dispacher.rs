@@ -25,8 +25,8 @@ impl<'a> ActionDispacher<'a> {
         self.store.dispatch(Actions::Move(from, to))
     }
 
-    pub fn will_fall(&'a self, from: Point) {
-        self.store.dispatch(Actions::Falling(from))
+    pub fn will_fall(&'a self, from: Point, to: Point) {
+        self.store.dispatch(Actions::Falling(from, to))
     }
 
     pub fn fall(&'a self, from: Point, to: Point) {
@@ -47,5 +47,13 @@ impl<'a> ActionDispacher<'a> {
 
     pub fn add_complete(&'a self, id: u64) {
         self.store.dispatch(Actions::AddCompleteTask(id))
+    }
+
+    pub fn queue_task(&'a self, id: u64) {
+        self.store.dispatch(Actions::QueueTask(id))
+    }
+
+    pub fn delete_queue_task(&'a self) {
+        self.store.dispatch(Actions::DeleteQueueTask)
     }
 }

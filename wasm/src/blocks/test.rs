@@ -7,14 +7,14 @@ mod tests {
         // #[rustfmt::skip]
         let board = Board::from(vec![
             vec![b(1), b(1), b(5)],
-            vec![None, b(1), b(3)],
-            vec![None, None, b(2)],
+            vec![None, None, b(3)],
+            vec![None, b(1), b(2)],
             vec![None, None, b(2)],
         ]);
 
         inspect(&board);
         println!("↓",);
-        let (next, moves) = fall_scanning(&board);
+        let (next, _) = fall_scanning(&board);
         inspect(&next);
     }
 

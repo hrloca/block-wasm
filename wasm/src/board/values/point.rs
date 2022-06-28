@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Eq, PartialEq, Debug, Clone, Copy)]
+#[derive(Hash, Eq, PartialEq, Debug, Clone, Copy)]
 pub struct Point {
     pub x: usize,
     pub y: usize,
