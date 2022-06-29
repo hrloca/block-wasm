@@ -95,6 +95,11 @@ pub async fn run() {
             let mut qs = queue_scheduler.borrow_mut();
 
             qs.put(
+                "tap",
+                Box::new(move |_| Some(ui::ParticleAction::Touch(target))),
+            );
+
+            qs.put(
                 "change",
                 Box::new(move |ctx| {
                     let deleting_point = ctx.state.deleting_point.clone();

@@ -6,7 +6,7 @@ use js_sys::Date;
 const G: f64 = 9.80665;
 
 fn px_to_m(px: f64) -> f64 {
-    px / 500.0
+    px / 1000.0
 }
 
 fn elapsed(px: f64) -> f64 {
@@ -45,7 +45,7 @@ impl FallParticle {
         let from = Point::of(from.x * width, from.y * height);
 
         // TODO: 400.0が適当数値だからちゃんとする
-        let dis = (self.core.elapsed() / 1000.0).powf(2.0) * G / 2.0 * 400.0;
+        let dis = (self.core.elapsed() / 1000.0).powf(2.0) * G / 2.0 * 900.0;
 
         let x = from.x as f64;
         let y = from.y as f64 + dis;
