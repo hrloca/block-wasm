@@ -33,7 +33,7 @@ pub async fn run() {
     let store = Rc::new(Store::create(store::State::create(), reducer));
 
     store.subscribe(Box::new(|state| {
-        // log!("store.subscribe: {:?}", state.falling_point);
+        log!("store.subscribe: {:?}", state.falling_point);
     }));
 
     let h = ui::HTML::new();
@@ -51,7 +51,7 @@ pub async fn run() {
     let particle_render = Rc::new(RefCell::new(ui::ParticleRender::create()));
     let pr = Rc::clone(&particle_render);
 
-    let queue_scheduler = Rc::new(RefCell::new(
+    let scheduler = Rc::new(RefCell::new(
         ui::TaskScheduler::<ui::ParticleAction>::create(
             Box::new(move |task_name, task| {
                 pr.borrow_mut()
@@ -66,8 +66,7 @@ pub async fn run() {
     {
         let store = Rc::clone(&store);
         let prender = Rc::clone(&particle_render);
-        // let scheduler = Rc::clone(&scheduler);
-        let queue_scheduler = Rc::clone(&queue_scheduler);
+        let scheduler = Rc::clone(&scheduler);
 
         FrameEngine::new(Box::new(move || {
             let state = &store.get_state();
@@ -80,14 +79,11 @@ pub async fn run() {
 
             field.render(&ctx);
             prender.borrow_mut().render(&ctx);
-            // scheduler.borrow_mut().processing_queue(&ctx);
-            queue_scheduler.borrow_mut().exec(&ctx);
-
-            queue_scheduler.borrow_mut().put(
+            scheduler.borrow_mut().put(
                 "fall",
                 Box::new(move |ctx| {
                     let state = ctx.state;
-                    let (_, moves) = blocks::fall_scanning(&state.blocks);
+                    let (_, mut moves) = blocks::fall_scanning(&state.blocks);
                     if moves.is_empty() {
                         None
                     } else {
@@ -95,18 +91,20 @@ pub async fn run() {
                     }
                 }),
             );
+
+            scheduler.borrow_mut().exec(&ctx);
         }))
         .start();
     }
 
     {
-        let queue_scheduler = Rc::clone(&queue_scheduler);
+        let scheduler = Rc::clone(&scheduler);
         let particle_render = Rc::clone(&particle_render);
         let handler = Closure::wrap(Box::new(move |e: MouseEvent| {
             let offset_x = e.offset_x();
             let offset_y = e.offset_y();
             let target = ui::Field::offset_to_point((offset_x, offset_y));
-            let mut qs = queue_scheduler.borrow_mut();
+            let mut qs = scheduler.borrow_mut();
             let mut pr = particle_render.borrow_mut();
 
             pr.dispatch(ui::ParticleAction::Touch(target));
@@ -120,10 +118,9 @@ pub async fn run() {
                     let mut falling_points: Vec<board::Point> = falling_point.into_iter().collect();
 
                     ignore_points.append(&mut falling_points);
-                    let final_ignore = blocks::should_not_change(&ctx.state.blocks, ignore_points);
 
                     if let Some((a, b)) =
-                        blocks::should_changed(&ctx.state.blocks, target, final_ignore)
+                        blocks::should_changed(&ctx.state.blocks, target, ignore_points)
                     {
                         Some(ui::ParticleAction::Change(a, b))
                     } else {
