@@ -10,7 +10,7 @@
     "build:wasm": "wasm-pack build ./ --scope hrloca",
     "build": " NODE_ENV=production webpack",
     "watch": "chokidar './src/**/*.rs' -c 'npm run build:wasm'",
-    "dev": "npm run build:wasm && npm run serve & npm run watch",
+    "dev": "NODE_ENV=production npm run serve",
     "test": "cargo test",
     "test:watch": "cargo watch -x 'test -- --nocapture'"
   },
