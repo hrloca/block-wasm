@@ -58,6 +58,7 @@ impl<'a, T> TaskScheduler<'a, T> {
                             if let Some(content) = task(&ctx) {
                                 (self.dequeue_event_listener)(name, content);
                                 ctx.action_dispacher.next_queue_task(name.to_string());
+                                return;
                             }
                         }
                     }

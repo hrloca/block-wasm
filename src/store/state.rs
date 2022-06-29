@@ -4,9 +4,6 @@ use std::collections::HashSet;
 
 #[derive(Debug, Clone)]
 pub struct State {
-    pub changing: HashSet<String>,
-    pub deleting: HashSet<String>,
-    pub falling: HashSet<String>,
     pub changing_point: HashSet<Point>,
     pub deleting_point: HashSet<Point>,
     pub falling_point: HashSet<Point>,
@@ -21,9 +18,6 @@ impl State {
     pub fn create() -> Self {
         State {
             blocks: create(),
-            changing: HashSet::new(),
-            deleting: HashSet::new(),
-            falling: HashSet::new(),
             changing_point: HashSet::new(),
             deleting_point: HashSet::new(),
             falling_point: HashSet::new(),

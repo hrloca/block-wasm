@@ -56,14 +56,11 @@ impl Field {
                     None => "#ffffff",
                 };
 
-                if let Some(block) = block {
-                    let id = &block.id.to_string();
-                    if state.changing.get(id).is_none()
-                        && state.deleting.get(id).is_none()
-                        && state.falling.get(id).is_none()
-                    {
-                        BlockShape::create((x, y), color).draw(&ctx);
-                    }
+                if !state.changing_point.contains(&point)
+                    && !state.deleting_point.contains(&point)
+                    && !state.falling_point.contains(&point)
+                {
+                    BlockShape::create((x, y), color).draw(&ctx);
                 }
             });
 
