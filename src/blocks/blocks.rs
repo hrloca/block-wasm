@@ -24,19 +24,21 @@ pub fn create() -> BlockBoard {
         if rng.gen::<f64>() > 0.5 {
             Some(Block::of(kind as u8))
         } else {
-            None
+            Some(Block::of(kind as u8))
         }
     });
 
-    // TODO: ランダムではなく、埋める
-    let (gps, _, _) = scanning(&blocks);
-    let dels = delete_points(&gps);
+    blocks
 
-    if dels.is_empty() {
-        return blocks;
-    } else {
-        create()
-    }
+    // // TODO: ランダムではなく、埋める
+    // let (gps, _, _) = scanning(&blocks);
+    // let dels = delete_points(&gps);
+
+    // if dels.is_empty() {
+    //     return blocks;
+    // } else {
+    //     create()
+    // }
 }
 
 pub fn valid(blocks: &BlockBoard, point: Point) -> Option<&Block> {
