@@ -1,6 +1,29 @@
 use crate::dom;
-use crate::log;
 use web_sys::*;
+
+pub struct Tag {
+    element: Element,
+}
+
+impl Tag {
+    pub fn name(name: &str) -> Self {
+        let el = dom::document().create_element(name).unwrap();
+        Tag { element: el }
+    }
+
+    pub fn class(&self, name: &str) -> &Self {
+        self.element.set_class_name(name);
+        &self
+    }
+
+    pub fn unwrap(self) -> Element {
+        self.element
+    }
+
+    pub fn as_ref(&self) -> &Element {
+        &self.element
+    }
+}
 
 pub struct HTML {
     document: Document,
@@ -23,10 +46,6 @@ impl HTML {
 
     pub fn render(&self, el: &Element) {
         self.body.append_child(el).unwrap();
-    }
-
-    pub fn el(&self, name: &str) -> Element {
-        self.document.create_element(name).unwrap()
     }
 
     pub fn get_by_id(&self, name: &str) -> Element {

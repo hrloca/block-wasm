@@ -18,6 +18,7 @@ use libs::*;
 use store::*;
 use tools::frame_engine::FrameEngine;
 use tools::store::Store;
+use ui::Tag;
 
 pub struct Ctx<'a> {
     pub state: &'a store::State,
@@ -37,7 +38,7 @@ pub async fn run() {
 
     let h = ui::HTML::new();
     let h = Rc::new(h);
-    let canvas_el = JsCast::dyn_into::<HtmlCanvasElement>(h.el("canvas")).unwrap();
+    let canvas_el = JsCast::dyn_into::<HtmlCanvasElement>(Tag::name("canvas").unwrap()).unwrap();
     let canvas = ui::Canvas::create(canvas_el);
     let field = ui::Field::create(
         &canvas.el,
@@ -150,9 +151,9 @@ pub async fn run() {
     {
         #[rustfmt::skip]
         h.render(h.node(
-            &h.el("div"),
+            Tag::name("div").as_ref(),
             vec![
-                h.node(&h.el("div"), vec![&canvas.el])
+                h.node(Tag::name("div").as_ref(), vec![&canvas.el])
             ],
         ));
     }
