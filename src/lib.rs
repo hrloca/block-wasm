@@ -83,11 +83,25 @@ pub async fn run() {
                 "fall",
                 Box::new(move |ctx| {
                     let state = ctx.state;
-                    let (_, mut moves) = blocks::fall_scanning(&state.blocks);
+                    let (_, moves) = blocks::fall_scanning(&state.blocks);
                     if moves.is_empty() {
                         None
                     } else {
                         Some(ui::ParticleAction::Fall(moves))
+                    }
+                }),
+            );
+
+            scheduler.borrow_mut().put(
+                "delete",
+                Box::new(|ctx| {
+                    let state = ctx.state;
+                    let (gps, _, _) = blocks::scanning(&state.blocks);
+                    let dels = blocks::delete_points(&gps);
+                    if dels.is_empty() {
+                        None
+                    } else {
+                        Some(ui::ParticleAction::Delete(dels))
                     }
                 }),
             );
@@ -128,17 +142,6 @@ pub async fn run() {
                     }
                 }),
             );
-
-            // scheduler.put(Box::new(|ctx| {
-            //     let state = ctx.state;
-            //     let (gps, _, _) = blocks::scanning(&state.blocks);
-            //     let dels = blocks::delete_points(&gps);
-            //     if dels.is_empty() {
-            //         None
-            //     } else {
-            //         Some(ui::ParticleAction::Delete(dels))
-            //     }
-            // }));
         }) as Box<dyn FnMut(_)>);
 
         let _ = &canvas
