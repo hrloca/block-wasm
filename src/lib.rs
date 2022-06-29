@@ -92,6 +92,7 @@ pub async fn run() {
                 }),
             );
 
+            // TODO: やっつけ…
             scheduler.borrow_mut().put(
                 "delete",
                 Box::new(|ctx| {
