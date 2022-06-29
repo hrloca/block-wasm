@@ -12,7 +12,7 @@ impl TouchParticle {
     pub fn create(target: Point) -> Self {
         TouchParticle {
             target,
-            core: ParticleCore::create(200.),
+            core: ParticleCore::create(300.),
             completed: false,
         }
     }

@@ -88,16 +88,15 @@ pub async fn run() {
 
     {
         let queue_scheduler = Rc::clone(&queue_scheduler);
+        let particle_render = Rc::clone(&particle_render);
         let handler = Closure::wrap(Box::new(move |e: MouseEvent| {
             let offset_x = e.offset_x();
             let offset_y = e.offset_y();
             let target = ui::Field::offset_to_point((offset_x, offset_y));
             let mut qs = queue_scheduler.borrow_mut();
+            let mut pr = particle_render.borrow_mut();
 
-            qs.put(
-                "tap",
-                Box::new(move |_| Some(ui::ParticleAction::Touch(target))),
-            );
+            pr.dispatch(ui::ParticleAction::Touch(target));
 
             qs.put(
                 "change",
