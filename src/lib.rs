@@ -82,6 +82,19 @@ pub async fn run() {
             prender.borrow_mut().render(&ctx);
             // scheduler.borrow_mut().processing_queue(&ctx);
             queue_scheduler.borrow_mut().exec(&ctx);
+
+            queue_scheduler.borrow_mut().put(
+                "fall",
+                Box::new(move |ctx| {
+                    let state = ctx.state;
+                    let (_, moves) = blocks::fall_scanning(&state.blocks);
+                    if moves.is_empty() {
+                        None
+                    } else {
+                        Some(ui::ParticleAction::Fall(moves))
+                    }
+                }),
+            );
         }))
         .start();
     }
@@ -115,19 +128,6 @@ pub async fn run() {
                         Some(ui::ParticleAction::Change(a, b))
                     } else {
                         None
-                    }
-                }),
-            );
-
-            qs.put(
-                "change",
-                Box::new(move |ctx| {
-                    let state = ctx.state;
-                    let (_, moves) = blocks::fall_scanning(&state.blocks);
-                    if moves.is_empty() {
-                        None
-                    } else {
-                        Some(ui::ParticleAction::Fall(moves))
                     }
                 }),
             );
