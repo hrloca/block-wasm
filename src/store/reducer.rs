@@ -136,15 +136,41 @@ pub fn reducer(state: &State, types: Actions) -> State {
             }
         }
 
-        Actions::QueueTask(id) => State {
-            active_queue_task: Some(id),
-            ..state.clone()
-        },
+        Actions::NextQueueName(name) => {
+            let mut next_queue_task = state.next_queue_task.clone();
+            next_queue_task.insert(name);
+            State {
+                next_queue_task,
+                ..state.clone()
+            }
+        }
 
-        Actions::DeleteQueueTask => State {
-            active_queue_task: None,
-            ..state.clone()
-        },
+        Actions::DeleteNextQueueName(name) => {
+            let mut next_queue_task = state.next_queue_task.clone();
+            next_queue_task.remove(&name);
+            State {
+                next_queue_task,
+                ..state.clone()
+            }
+        }
+
+        Actions::DeleteActiveQueueName(name) => {
+            let mut active_queue_task = state.active_queue_task.clone();
+            active_queue_task.remove(&name);
+            State {
+                active_queue_task,
+                ..state.clone()
+            }
+        }
+
+        Actions::ActiveQueueName(name) => {
+            let mut active_queue_task = state.active_queue_task.clone();
+            active_queue_task.insert(name);
+            State {
+                active_queue_task,
+                ..state.clone()
+            }
+        }
 
         _ => state.clone(),
     }

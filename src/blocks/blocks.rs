@@ -24,7 +24,7 @@ pub fn create() -> BlockBoard {
         if rng.gen::<f64>() > 0.5 {
             Some(Block::of(kind as u8))
         } else {
-            Some(Block::of(kind as u8))
+            None
         }
     });
 

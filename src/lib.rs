@@ -33,7 +33,7 @@ pub async fn run() {
     let store = Rc::new(Store::create(store::State::create(), reducer));
 
     store.subscribe(Box::new(|state| {
-        log!("store.subscribe: {:?}", state.falling_point);
+        // log!("store.subscribe: {:?}", state.falling_point);
     }));
 
     let h = ui::HTML::new();
@@ -51,16 +51,23 @@ pub async fn run() {
     let particle_render = Rc::new(RefCell::new(ui::ParticleRender::create()));
     let pr = Rc::clone(&particle_render);
 
-    let scheduler = Rc::new(RefCell::new(
-        ui::TaskScheduler::<ui::ParticleAction>::create(Box::new(move |task_id, task| {
-            pr.borrow_mut().dispatch_with(task_id, task);
-        })),
+    let queue_scheduler = Rc::new(RefCell::new(
+        ui::TaskScheduler::<ui::ParticleAction>::create(
+            Box::new(move |task_name, task| {
+                pr.borrow_mut()
+                    .dispatch_with_name(task_name.to_string(), task);
+            }),
+            Box::new(move |task_name| {
+                // end queue
+            }),
+        ),
     ));
 
     {
         let store = Rc::clone(&store);
         let prender = Rc::clone(&particle_render);
-        let scheduler = Rc::clone(&scheduler);
+        // let scheduler = Rc::clone(&scheduler);
+        let queue_scheduler = Rc::clone(&queue_scheduler);
 
         FrameEngine::new(Box::new(move || {
             let state = &store.get_state();
@@ -73,71 +80,64 @@ pub async fn run() {
 
             field.render(&ctx);
             prender.borrow_mut().render(&ctx);
-            scheduler
-                .borrow_mut()
-                .processing_queue(&state.complete_tasks, &ctx);
+            // scheduler.borrow_mut().processing_queue(&ctx);
+            queue_scheduler.borrow_mut().exec(&ctx);
         }))
         .start();
     }
 
     {
-        let scheduler = Rc::clone(&scheduler);
+        let queue_scheduler = Rc::clone(&queue_scheduler);
         let handler = Closure::wrap(Box::new(move |e: MouseEvent| {
             let offset_x = e.offset_x();
             let offset_y = e.offset_y();
             let target = ui::Field::offset_to_point((offset_x, offset_y));
-            let mut scheduler = scheduler.borrow_mut();
+            let mut qs = queue_scheduler.borrow_mut();
 
-            scheduler.put(Box::new(move |ctx| {
-                let deleting_point = ctx.state.deleting_point.clone();
-                let falling_point = ctx.state.falling_point.clone();
-                let mut ignore_points: Vec<board::Point> = deleting_point.into_iter().collect();
-                let mut falling_points: Vec<board::Point> = falling_point.into_iter().collect();
+            qs.put(
+                "change",
+                Box::new(move |ctx| {
+                    let deleting_point = ctx.state.deleting_point.clone();
+                    let falling_point = ctx.state.falling_point.clone();
+                    let mut ignore_points: Vec<board::Point> = deleting_point.into_iter().collect();
+                    let mut falling_points: Vec<board::Point> = falling_point.into_iter().collect();
 
-                ignore_points.append(&mut falling_points);
-                let final_ignore = blocks::should_not_change(&ctx.state.blocks, ignore_points);
+                    ignore_points.append(&mut falling_points);
+                    let final_ignore = blocks::should_not_change(&ctx.state.blocks, ignore_points);
 
-                log!("{:?}", final_ignore);
+                    if let Some((a, b)) =
+                        blocks::should_changed(&ctx.state.blocks, target, final_ignore)
+                    {
+                        Some(ui::ParticleAction::Change(a, b))
+                    } else {
+                        None
+                    }
+                }),
+            );
 
-                if let Some((a, b)) =
-                    blocks::should_changed(&ctx.state.blocks, target, final_ignore)
-                {
-                    Some(ui::ParticleAction::Change(a, b))
-                } else {
-                    None
-                }
-            }));
+            qs.put(
+                "change",
+                Box::new(move |ctx| {
+                    let state = ctx.state;
+                    let (_, moves) = blocks::fall_scanning(&state.blocks);
+                    if moves.is_empty() {
+                        None
+                    } else {
+                        Some(ui::ParticleAction::Fall(moves))
+                    }
+                }),
+            );
 
-            scheduler.put(Box::new(move |ctx| {
-                let state = ctx.state;
-                let (_, moves) = blocks::fall_scanning(&state.blocks);
-                if moves.is_empty() {
-                    None
-                } else {
-                    Some(ui::ParticleAction::Fall(moves))
-                }
-            }));
-
-            scheduler.put(Box::new(|ctx| {
-                let state = ctx.state;
-                let (gps, _, _) = blocks::scanning(&state.blocks);
-                let dels = blocks::delete_points(&gps);
-                if dels.is_empty() {
-                    None
-                } else {
-                    Some(ui::ParticleAction::Delete(dels))
-                }
-            }));
-
-            scheduler.put(Box::new(move |ctx| {
-                let state = ctx.state;
-                let (_, moves) = blocks::fall_scanning(&state.blocks);
-                if moves.is_empty() {
-                    None
-                } else {
-                    Some(ui::ParticleAction::Fall(moves))
-                }
-            }));
+            // scheduler.put(Box::new(|ctx| {
+            //     let state = ctx.state;
+            //     let (gps, _, _) = blocks::scanning(&state.blocks);
+            //     let dels = blocks::delete_points(&gps);
+            //     if dels.is_empty() {
+            //         None
+            //     } else {
+            //         Some(ui::ParticleAction::Delete(dels))
+            //     }
+            // }));
         }) as Box<dyn FnMut(_)>);
 
         let _ = &canvas

@@ -1,6 +1,6 @@
 use crate::blocks::*;
 use crate::board::*;
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -12,8 +12,9 @@ pub struct State {
     pub falling_point: HashSet<Point>,
     pub blocks: Board<Option<Block>>,
     pub complete_tasks: Vec<u64>,
-    pub queue_tasks: VecDeque<u64>,
-    pub active_queue_task: Option<u64>,
+
+    pub next_queue_task: HashSet<String>,
+    pub active_queue_task: HashSet<String>,
 }
 
 impl State {
@@ -26,9 +27,11 @@ impl State {
             changing_point: HashSet::new(),
             deleting_point: HashSet::new(),
             falling_point: HashSet::new(),
+
             complete_tasks: Vec::new(),
-            queue_tasks: VecDeque::new(),
-            active_queue_task: None,
+
+            next_queue_task: HashSet::new(),
+            active_queue_task: HashSet::new(),
         }
     }
 }

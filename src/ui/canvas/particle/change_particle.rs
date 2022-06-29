@@ -14,7 +14,7 @@ impl ChangeParticle {
         ChangeParticle {
             a,
             b,
-            core: ParticleCore::create(180.),
+            core: ParticleCore::create(80.),
             completed: false,
         }
     }

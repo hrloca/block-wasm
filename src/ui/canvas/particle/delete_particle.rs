@@ -13,7 +13,7 @@ impl DeleteParticle {
         DeleteParticle {
             delete,
             on: false,
-            core: ParticleCore::create(500.),
+            core: ParticleCore::create(1000.),
             completed: false,
         }
     }

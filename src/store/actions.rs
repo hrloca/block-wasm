@@ -8,8 +8,12 @@ pub enum Actions {
     Move(Point, Point),
     Fall(Point, Point),
     Falling(Point, Point),
+
     DeleteCompleteTask(u64),
     AddCompleteTask(u64),
-    QueueTask(u64),
-    DeleteQueueTask,
+
+    ActiveQueueName(String),
+    DeleteActiveQueueName(String),
+    NextQueueName(String),
+    DeleteNextQueueName(String),
 }

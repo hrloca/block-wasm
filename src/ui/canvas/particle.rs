@@ -47,6 +47,7 @@ type TaskIdPool = Vec<u64>;
 pub struct ParticleRender {
     pool: ParticlePool,
     task_pool: TaskIdPool,
+    names: HashMap<u64, String>,
 }
 
 impl ParticleRender {
@@ -54,12 +55,19 @@ impl ParticleRender {
         ParticleRender {
             pool: HashMap::new(),
             task_pool: Vec::new(),
+            names: HashMap::new(),
         }
     }
 
-    pub fn dispatch(&mut self, p: ParticleAction) {
+    pub fn dispatch(&mut self, p: ParticleAction) -> u64 {
         let task_id = *issue_task_id().borrow_mut();
         self.dispatch_with(task_id, p);
+        task_id
+    }
+
+    pub fn dispatch_with_name(&mut self, name: String, p: ParticleAction) {
+        let task_id = self.dispatch(p);
+        self.names.insert(task_id, name);
     }
 
     pub fn dispatch_with(&mut self, task_id: u64, p: ParticleAction) {
@@ -119,6 +127,11 @@ impl ParticleRender {
         self.draw(context);
         for tasks in self.drop(context).iter() {
             context.action_dispacher.add_complete(*tasks);
+            if let Some(name) = self.names.get(tasks) {
+                context
+                    .action_dispacher
+                    .delete_next_queue_task(name.to_string());
+            }
         }
         // TODO: delete particle gabege.
     }

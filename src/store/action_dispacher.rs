@@ -49,11 +49,19 @@ impl<'a> ActionDispacher<'a> {
         self.store.dispatch(Actions::AddCompleteTask(id))
     }
 
-    pub fn queue_task(&'a self, id: u64) {
-        self.store.dispatch(Actions::QueueTask(id))
+    pub fn next_queue_task(&'a self, name: String) {
+        self.store.dispatch(Actions::NextQueueName(name))
     }
 
-    pub fn delete_queue_task(&'a self) {
-        self.store.dispatch(Actions::DeleteQueueTask)
+    pub fn active_queue_task(&'a self, name: String) {
+        self.store.dispatch(Actions::ActiveQueueName(name))
+    }
+
+    pub fn delete_next_queue_task(&'a self, name: String) {
+        self.store.dispatch(Actions::DeleteNextQueueName(name))
+    }
+
+    pub fn delete_active_queue_task(&'a self, name: String) {
+        self.store.dispatch(Actions::DeleteActiveQueueName(name))
     }
 }
