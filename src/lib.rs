@@ -25,7 +25,7 @@ pub struct Ctx<'a> {
     pub canvas_ctx: &'a CanvasRenderingContext2d,
 }
 
-#[wasm_bindgen(start)]
+#[wasm_bindgen()]
 pub async fn run() {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
 
