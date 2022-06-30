@@ -10,6 +10,7 @@ impl Sound {
     }
 
     pub fn play_begining(&self) {
+        self.pause();
         self.src.set_current_time(0.);
         self.play();
     }
