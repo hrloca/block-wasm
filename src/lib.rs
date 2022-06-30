@@ -110,8 +110,7 @@ pub async fn run() {
                     let state = ctx.state;
                     let (gps, _, _) = blocks::scanning(&state.blocks);
                     let dels = blocks::delete_points(&gps);
-                    let (_, moves) = blocks::fall_scanning(&state.blocks);
-                    if dels.is_empty() || !moves.is_empty() {
+                    if dels.is_empty() || !state.falling_point.is_empty() {
                         None
                     } else {
                         Some(ui::ParticleAction::Delete(dels))
