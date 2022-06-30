@@ -22,6 +22,7 @@ impl Field {
         let height = block_height * row as f64;
         canvas.set_width(width as u32);
         canvas.set_height(height as u32);
+        canvas.set_class_name("absolute inset-2/4 translate-y-[-50%] translate-x-[-50%]");
 
         Field {
             colors: Colors::create(),

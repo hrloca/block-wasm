@@ -13,8 +13,11 @@ import "./se/ok.mp3";
   button.classList.add("rounded");
   button.classList.add("absolute");
   button.classList.add("inset-2/4");
-  button.classList.add("w-16");
-  button.classList.add("h-9");
+  button.classList.add("translate-y-[-50%]");
+  button.classList.add("translate-x-[-50%]");
+
+  button.classList.add("w-32");
+  button.classList.add("h-10");
 
   button.textContent = "play";
 
