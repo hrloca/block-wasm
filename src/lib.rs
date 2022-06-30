@@ -33,9 +33,7 @@ pub async fn run() {
 
     let store = Rc::new(Store::create(store::State::create(), reducer));
 
-    store.subscribe(Box::new(|state| {
-        log!("store.subscribe: {:?}", state.next_queue_task);
-    }));
+    // store.subscribe(Box::new(|state| {}));
 
     let h = ui::HTML::new();
     let h = Rc::new(h);
