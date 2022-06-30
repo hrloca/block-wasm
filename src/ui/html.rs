@@ -1,4 +1,5 @@
 use crate::dom;
+use wasm_bindgen::JsCast;
 use web_sys::*;
 
 pub struct Tag {
@@ -22,6 +23,10 @@ impl Tag {
 
     pub fn as_ref(&self) -> &Element {
         &self.element
+    }
+
+    pub fn cast<T: JsCast>(el: Element) -> T {
+        JsCast::dyn_into::<T>(el).unwrap()
     }
 }
 
@@ -50,6 +55,10 @@ impl HTML {
 
     pub fn get_by_id(&self, name: &str) -> Element {
         self.document.get_element_by_id(name).unwrap()
+    }
+
+    pub fn query_selector(&self, selectors: &str) -> Element {
+        self.document.query_selector(selectors).unwrap().unwrap()
     }
 
     pub fn ev(&self, name: &str) -> Event {

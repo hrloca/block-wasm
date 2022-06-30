@@ -24,4 +24,15 @@ module.exports = {
       overlay: false,
     },
   },
+  module: {
+    rules: [
+      {
+        test: /\.(ogg|mp3|wav|mpe?g)$/i,
+        loader: "file-loader",
+        options: {
+          name: "[path][name].[ext]",
+        },
+      },
+    ],
+  },
 };

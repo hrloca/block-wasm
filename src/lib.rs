@@ -24,6 +24,7 @@ pub struct Ctx<'a> {
     pub state: &'a store::State,
     pub action_dispacher: ActionDispacher<'a>,
     pub canvas_ctx: &'a CanvasRenderingContext2d,
+    pub se: &'a ui::SE,
 }
 
 #[wasm_bindgen()]
@@ -48,6 +49,14 @@ pub async fn run() {
         ui::HEIGHT,
     );
 
+    let se = Rc::new(ui::SE {
+        cancel: ui::Sound::new(Tag::cast(h.query_selector(".cancel"))),
+        change: ui::Sound::new(Tag::cast(h.query_selector(".change"))),
+        delete: ui::Sound::new(Tag::cast(h.query_selector(".delete"))),
+        landing: ui::Sound::new(Tag::cast(h.query_selector(".landing"))),
+        ok: ui::Sound::new(Tag::cast(h.query_selector(".ok"))),
+    });
+
     let particle_render = Rc::new(RefCell::new(ui::ParticleRender::create()));
     let pr = Rc::clone(&particle_render);
 
@@ -67,11 +76,13 @@ pub async fn run() {
         let store = Rc::clone(&store);
         let prender = Rc::clone(&particle_render);
         let scheduler = Rc::clone(&scheduler);
+        let se = Rc::clone(&se);
 
         FrameEngine::new(Box::new(move || {
             let state = &store.get_state();
             let action_dispacher = ActionDispacher::new(&store);
             let ctx = Ctx {
+                se: se.as_ref(),
                 state,
                 canvas_ctx: &canvas.ctx,
                 action_dispacher,

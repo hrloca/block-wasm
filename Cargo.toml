@@ -33,6 +33,7 @@ features = [
   'MouseEvent',
   'Node',
   'Window',
+  'HtmlAudioElement',
 ]
 
 [workspace]

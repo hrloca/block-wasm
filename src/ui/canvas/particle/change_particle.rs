@@ -82,6 +82,7 @@ impl ParticleEntity for ChangeParticle {
     }
 
     fn started(&self, context: &crate::Ctx) {
+        context.se.change.play_begining();
         context.action_dispacher.will_change(self.a, self.b);
     }
 }
