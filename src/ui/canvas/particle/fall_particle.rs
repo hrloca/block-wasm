@@ -44,8 +44,8 @@ impl FallParticle {
         let height = HEIGHT as usize;
         let from = Point::of(from.x * width, from.y * height);
 
-        // TODO: 400.0が適当数値だからちゃんとする
-        let dis = (self.core.elapsed() / 1000.0).powf(2.0) * G / 2.0 * 900.0;
+        // TODO: 適当数値だからちゃんとする
+        let dis = (self.core.elapsed() / 1000.0).powf(2.0) * G / 2.0 * 750.0;
 
         let x = from.x as f64;
         let y = from.y as f64 + dis;
