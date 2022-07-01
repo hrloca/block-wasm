@@ -31,6 +31,7 @@ button.textContent = "play";
           let audio = new Audio();
           audio.src = src.default;
           //audio.addEventListener("canplaythrough", () => {
+          audio.load();
           audio.addEventListener("canplaythrough", () => {
             resolve();
           });
