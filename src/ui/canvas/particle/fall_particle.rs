@@ -89,7 +89,7 @@ impl ParticleEntity for FallParticle {
     }
 
     fn complete(&self, context: &crate::Ctx) {
-        // context.se.landing.play_begining();
+        context.se.landing.play();
         context.action_dispacher.fall(self.from, self.to);
     }
 

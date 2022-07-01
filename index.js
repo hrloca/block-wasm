@@ -1,30 +1,47 @@
-import "./bgm/Sparkling.mp3";
-import "./se/cancel.mp3";
-import "./se/change.mp3";
-import "./se/delete.mp3";
-import "./se/landing.mp3";
-import "./se/ok.mp3";
+const container = document.createElement("div");
+container.className =
+  "h-screen flex content-center items-center justify-center";
+
+const loading = document.createElement("div");
+loading.className =
+  "animate-spin h-10 w-10 border-4 border-blue-500 rounded-full border-t-transparent";
+loading.className = "animate-ping h-4 w-4 bg-blue-600 rounded-full";
+
+const button = document.createElement("button");
+button.className =
+  "text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2";
+
+button.textContent = "play";
 
 (async () => {
+  document.body.appendChild(container);
+  container.appendChild(loading);
+
   const wasm = await import("./pkg");
-  const button = document.createElement("button");
-  button.classList.add("border-black");
-  button.classList.add("border-2");
-  button.classList.add("rounded");
-  button.classList.add("absolute");
-  button.classList.add("inset-2/4");
-  button.classList.add("translate-y-[-50%]");
-  button.classList.add("translate-x-[-50%]");
-
-  button.classList.add("w-32");
-  button.classList.add("h-10");
-
-  button.textContent = "play";
+  await Promise.all(
+    [
+      await import("./bgm/Sparkling.mp3"),
+      await import("./se/cancel.mp3"),
+      await import("./se/change.mp3"),
+      await import("./se/change.mp3"),
+      await import("./se/delete.mp3"),
+      await import("./se/landing.mp3"),
+    ].map(
+      (src) =>
+        new Promise((resolve, reject) => {
+          let audio = new Audio();
+          audio.src = src.default;
+          audio.addEventListener("canplaythrough", () => {
+            resolve();
+          });
+        })
+    )
+  );
 
   button.addEventListener("click", () => {
+    container.remove();
     wasm.run();
-    button.remove();
   });
-
-  document.body.appendChild(button);
+  loading.remove();
+  container.appendChild(button);
 })();

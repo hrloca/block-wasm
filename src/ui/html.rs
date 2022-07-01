@@ -1,3 +1,4 @@
+use super::*;
 use crate::dom;
 use wasm_bindgen::JsCast;
 use web_sys::*;

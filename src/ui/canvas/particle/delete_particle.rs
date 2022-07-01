@@ -71,7 +71,7 @@ impl ParticleEntity for DeleteParticle {
     }
 
     fn started(&self, context: &crate::Ctx) {
-        // context.se.delete.play_begining();
+        context.se.delete.play();
         context.action_dispacher.will_delete(self.delete.clone());
     }
 }

@@ -24,7 +24,7 @@ pub struct Ctx<'a> {
     pub state: &'a store::State,
     pub action_dispacher: ActionDispacher<'a>,
     pub canvas_ctx: &'a CanvasRenderingContext2d,
-    pub se: &'a ui::SE,
+    pub se: &'a ui::SE<'a>,
 }
 
 #[wasm_bindgen()]
@@ -37,7 +37,7 @@ pub async fn run() {
 
     let h = ui::HTML::new();
     let h = Rc::new(h);
-    let canvas_el = JsCast::dyn_into::<HtmlCanvasElement>(Tag::name("canvas").unwrap()).unwrap();
+    let canvas_el: HtmlCanvasElement = Tag::cast(Tag::name("canvas").unwrap());
     let canvas = ui::Canvas::create(canvas_el);
     let field = ui::Field::create(
         &canvas.el,
@@ -48,11 +48,11 @@ pub async fn run() {
     );
 
     let se = Rc::new(ui::SE {
-        cancel: ui::Sound::new(Tag::cast(h.query_selector(".cancel"))),
-        change: ui::Sound::new(Tag::cast(h.query_selector(".change"))),
-        delete: ui::Sound::new(Tag::cast(h.query_selector(".delete"))),
-        landing: ui::Sound::new(Tag::cast(h.query_selector(".landing"))),
-        ok: ui::Sound::new(Tag::cast(h.query_selector(".ok"))),
+        cancel: ui::Sound::new("se/cancel.mp3"),
+        change: ui::Sound::new("se/change.mp3"),
+        delete: ui::Sound::new("se/delete.mp3"),
+        landing: ui::Sound::new("se/landing.mp3"),
+        ok: ui::Sound::new("se/ok.mp3"),
     });
 
     let particle_render = Rc::new(RefCell::new(ui::ParticleRender::create()));
