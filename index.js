@@ -20,7 +20,6 @@ button.textContent = "play";
   const wasm = await import("./pkg");
   await Promise.all(
     [
-      await import("./bgm/Sparkling.mp3"),
       await import("./se/cancel.mp3"),
       await import("./se/change.mp3"),
       await import("./se/change.mp3"),
@@ -31,6 +30,7 @@ button.textContent = "play";
         new Promise((resolve, reject) => {
           let audio = new Audio();
           audio.src = src.default;
+          //audio.addEventListener("canplaythrough", () => {
           audio.addEventListener("canplaythrough", () => {
             resolve();
           });
