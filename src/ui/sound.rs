@@ -11,9 +11,10 @@ impl<'a> Sound<'a> {
     }
 
     pub fn play(&self) {
-        let sound: HtmlAudioElement = Tag::cast(Tag::name("audio").unwrap());
-        sound.set_src(&self.src);
-        sound.play();
+        // TODO: Web Audio APIを使う
+        // let sound: HtmlAudioElement = Tag::cast(Tag::name("audio").unwrap());
+        // sound.set_src(&self.src);
+        // sound.play();
     }
 }
 
