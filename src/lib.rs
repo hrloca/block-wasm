@@ -75,7 +75,6 @@ pub async fn run() {
         let prender = Rc::clone(&particle_render);
         let scheduler = Rc::clone(&scheduler);
         let se = Rc::clone(&se);
-
         FrameEngine::new(Box::new(move || {
             let state = &store.get_state();
             let action_dispacher = ActionDispacher::new(&store);
@@ -126,10 +125,10 @@ pub async fn run() {
         .start();
     }
 
-    {
+    let handler = {
         let scheduler = Rc::clone(&scheduler);
         let particle_render = Rc::clone(&particle_render);
-        let handler = Closure::wrap(Box::new(move |e: MouseEvent| {
+        Closure::wrap(Box::new(move |e: MouseEvent| {
             let offset_x = e.offset_x();
             let offset_y = e.offset_y();
             let target = ui::Field::offset_to_point((offset_x, offset_y));
@@ -157,15 +156,14 @@ pub async fn run() {
                     }
                 }),
             );
-        }) as Box<dyn FnMut(_)>);
+        }) as Box<dyn FnMut(_)>)
+    };
 
-        let _ = &canvas
-            .el
-            .add_event_listener_with_callback("click", handler.as_ref().unchecked_ref())
-            .unwrap();
-
-        handler.forget();
-    }
+    let _ = &canvas
+        .el
+        .add_event_listener_with_callback("click", handler.as_ref().unchecked_ref())
+        .unwrap();
+    handler.forget();
 
     {
         #[rustfmt::skip]

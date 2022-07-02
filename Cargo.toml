@@ -24,7 +24,6 @@ wasm-bindgen-futures = "0.4.31"
 version = "0.3.4"
 features = [
   'CanvasRenderingContext2d',
-  'CssStyleDeclaration',
   'Document',
   'Element',
   'EventTarget',
@@ -33,6 +32,12 @@ features = [
   'MouseEvent',
   'Node',
   'Window',
+  'XmlHttpRequest',
+  'AudioContext',
+  'XmlHttpRequestResponseType',
+  'AudioBuffer',
+  'AudioBufferSourceNode',
+  'AudioDestinationNode',
   'HtmlAudioElement',
 ]
 
