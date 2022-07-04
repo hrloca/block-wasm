@@ -141,6 +141,7 @@ pub async fn run(se: Vec<JsValue>) {
             let mut pr = particle_render.borrow_mut();
 
             if blocks::is_over(&state.blocks) {
+                dom::location().reload();
                 return;
             }
 

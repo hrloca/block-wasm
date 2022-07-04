@@ -15,6 +15,10 @@ pub fn window() -> web_sys::Window {
     web_sys::window().unwrap()
 }
 
+pub fn location() -> web_sys::Location {
+    window().location()
+}
+
 pub fn request_animation_frame(f: &Closure<dyn FnMut()>) -> i32 {
     window()
         .request_animation_frame(f.as_ref().unchecked_ref())
