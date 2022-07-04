@@ -4,31 +4,25 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::AudioBuffer;
-use web_sys::AudioBufferSourceNode;
 use web_sys::AudioContext;
-use web_sys::AudioDestinationNode;
 use web_sys::*;
 
 pub struct Sound<'a> {
-    path: &'a str,
+    path: Option<&'a str>,
     array_buffer: Rc<RefCell<Option<ArrayBuffer>>>,
     audio_buffer: Rc<RefCell<Option<AudioBuffer>>>,
-    source: Rc<RefCell<Option<AudioBufferSourceNode>>>,
     context: Rc<AudioContext>,
 }
 
 // TODO: safariで音出ない
 impl<'a> Sound<'a> {
-    pub fn new(path: &'a str) -> Self {
-        let instance = Sound {
-            path,
+    pub fn from(ab: AudioBuffer, ctx: Rc<AudioContext>) -> Self {
+        Sound {
+            path: None,
             array_buffer: Rc::new(RefCell::new(None)),
-            audio_buffer: Rc::new(RefCell::new(None)),
-            source: Rc::new(RefCell::new(None)),
-            context: Rc::new(AudioContext::new().unwrap()),
-        };
-        instance.load_src();
-        instance
+            audio_buffer: Rc::new(RefCell::new(Some(ab))),
+            context: ctx,
+        }
     }
 
     pub fn play(&self) {
@@ -37,7 +31,7 @@ impl<'a> Sound<'a> {
                 let source = self.context.create_buffer_source().unwrap();
                 source.set_buffer(Some(audio_buffer));
                 source.connect_with_audio_node(&self.context.destination());
-                source.start_with_when(0.);
+                source.start();
             }
             None => {
                 crate::log!("decoding");
@@ -65,21 +59,28 @@ impl<'a> Sound<'a> {
     }
 
     fn load_src(&self) {
-        let xhr = Rc::new(XmlHttpRequest::new().unwrap());
-        xhr.set_response_type(XmlHttpRequestResponseType::Arraybuffer);
-        xhr.open("GET", &self.path);
-        let onload = {
-            let cxhr = Rc::clone(&xhr);
-            let bf = Rc::clone(&self.array_buffer);
-            Closure::wrap(Box::new(move |_: Event| {
-                let res: ArrayBuffer = cxhr.response().unwrap_throw().unchecked_into();
-                let raw: Vec<u8> = Uint8Array::new(&res).to_vec();
-                *bf.borrow_mut() = Some(res);
-            }) as Box<dyn FnMut(_)>)
-        };
-        xhr.set_onload(Some(onload.as_ref().unchecked_ref()));
-        xhr.send();
-        onload.forget();
+        match self.path {
+            Some(path) => {
+                let xhr = Rc::new(XmlHttpRequest::new().unwrap());
+                xhr.set_response_type(XmlHttpRequestResponseType::Arraybuffer);
+                xhr.open("GET", &path);
+                let onload = {
+                    let cxhr = Rc::clone(&xhr);
+                    let bf = Rc::clone(&self.array_buffer);
+                    Closure::wrap(Box::new(move |_: Event| {
+                        let res: ArrayBuffer = cxhr.response().unwrap_throw().unchecked_into();
+                        let raw: Vec<u8> = Uint8Array::new(&res).to_vec();
+                        *bf.borrow_mut() = Some(res);
+                    }) as Box<dyn FnMut(_)>)
+                };
+                xhr.set_onload(Some(onload.as_ref().unchecked_ref()));
+                xhr.send();
+                onload.forget();
+            }
+            None => {
+                crate::log!("パスが設定されていません");
+            }
+        }
     }
 }
 

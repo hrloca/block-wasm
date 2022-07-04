@@ -27,14 +27,16 @@ pub struct Ctx<'a> {
     pub se: &'a ui::SE<'a>,
 }
 
-#[wasm_bindgen()]
-pub async fn run() {
+#[wasm_bindgen]
+pub async fn run(se: Vec<JsValue>) {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
+    let se: Vec<AudioBuffer> = se
+        .into_iter()
+        .map(|jsv| JsCast::dyn_into::<AudioBuffer>(jsv).unwrap())
+        .collect();
 
     let store = Rc::new(Store::create(store::State::create(), reducer));
-
     // store.subscribe(Box::new(|state| {}));
-
     let h = ui::HTML::new();
     let h = Rc::new(h);
     let canvas_el: HtmlCanvasElement = Tag::cast(Tag::name("canvas").unwrap());
@@ -47,12 +49,13 @@ pub async fn run() {
         ui::HEIGHT,
     );
 
+    let actx = Rc::new(AudioContext::new().unwrap());
     let se = Rc::new(ui::SE {
-        cancel: ui::Sound::new("se/cancel.mp3"),
-        change: ui::Sound::new("se/change.mp3"),
-        delete: ui::Sound::new("se/delete.mp3"),
-        landing: ui::Sound::new("se/landing.mp3"),
-        ok: ui::Sound::new("se/ok.mp3"),
+        cancel: ui::Sound::from(se[0].clone(), Rc::clone(&actx)),
+        change: ui::Sound::from(se[1].clone(), Rc::clone(&actx)),
+        delete: ui::Sound::from(se[2].clone(), Rc::clone(&actx)),
+        landing: ui::Sound::from(se[3].clone(), Rc::clone(&actx)),
+        ok: ui::Sound::from(se[4].clone(), Rc::clone(&actx)),
     });
 
     let particle_render = Rc::new(RefCell::new(ui::ParticleRender::create()));
@@ -128,6 +131,7 @@ pub async fn run() {
     let handler = {
         let scheduler = Rc::clone(&scheduler);
         let particle_render = Rc::clone(&particle_render);
+        let se = Rc::clone(&se);
         Closure::wrap(Box::new(move |e: MouseEvent| {
             let offset_x = e.offset_x();
             let offset_y = e.offset_y();

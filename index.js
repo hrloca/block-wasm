@@ -16,7 +16,7 @@ button.textContent = "play";
   container.appendChild(loading);
 
   const wasm = await import("./pkg");
-  await Promise.all(
+  const buffs = await Promise.all(
     [
       await import("./se/cancel.mp3"),
       await import("./se/change.mp3"),
@@ -25,7 +25,7 @@ button.textContent = "play";
       await import("./se/ok.mp3"),
     ].map(
       (src) =>
-        new Promise((resolve, reject) => {
+        new Promise((resolve, _) => {
           var xhr = new XMLHttpRequest();
           xhr.responseType = "arraybuffer";
           xhr.open("GET", src.default);
@@ -41,7 +41,7 @@ button.textContent = "play";
 
   button.addEventListener("click", () => {
     container.remove();
-    wasm.run();
+    wasm.run(buffs);
   });
   loading.remove();
   container.appendChild(button);
