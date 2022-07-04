@@ -39,6 +39,30 @@ pub fn create() -> BlockBoard {
     }
 }
 
+pub fn is_over(blocks: &BlockBoard) -> bool {
+    let aggregated: HashMap<u8, Vec<Block>> = HashMap::new();
+    let result = blocks.fold(aggregated, |mut acc, (_, block)| {
+        if let Some(b) = block {
+            match acc.get_mut(&b.kind) {
+                Some(blocks) => {
+                    blocks.push(b.clone());
+                }
+                None => {
+                    acc.insert(b.kind, vec![b.clone()]);
+                }
+            };
+        };
+        acc
+    });
+
+    let mut cant_erase: Vec<bool> = vec![];
+    for (_, blocks) in result.iter() {
+        cant_erase.push(blocks.len() < SHOULD_CONNECT_WITH_DELETE);
+    }
+
+    cant_erase.into_iter().all(|x| x)
+}
+
 pub fn valid(blocks: &BlockBoard, point: Point) -> Option<&Block> {
     blocks.valid(point).and_then(|p| blocks.pick(p).as_ref())
 }

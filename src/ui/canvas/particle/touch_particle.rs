@@ -45,7 +45,6 @@ impl ParticleEntity for TouchParticle {
             return;
         }
         let ctx = context.canvas_ctx;
-        let state = context.state;
         if !self.core.is_enter() {
             self.core.start_at(Date::new_0().get_time());
         }

@@ -129,15 +129,20 @@ pub async fn run(se: Vec<JsValue>) {
     }
 
     let handler = {
+        let store = Rc::clone(&store);
         let scheduler = Rc::clone(&scheduler);
         let particle_render = Rc::clone(&particle_render);
-        let se = Rc::clone(&se);
         Closure::wrap(Box::new(move |e: MouseEvent| {
             let offset_x = e.offset_x();
             let offset_y = e.offset_y();
             let target = ui::Field::offset_to_point((offset_x, offset_y));
+            let state = store.get_state();
             let mut qs = scheduler.borrow_mut();
             let mut pr = particle_render.borrow_mut();
+
+            if blocks::is_over(&state.blocks) {
+                return;
+            }
 
             pr.dispatch(ui::ParticleAction::Touch(target));
 

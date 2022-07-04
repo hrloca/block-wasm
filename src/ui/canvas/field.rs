@@ -1,4 +1,5 @@
 use super::*;
+use crate::blocks::*;
 use crate::board::*;
 use crate::store::*;
 use std::f64;
@@ -65,6 +66,13 @@ impl Field {
                 }
             });
 
+            if is_over(&state.blocks) {
+                ctx.set_fill_style(&"rgba(255,255,255,0.7)".into());
+                ctx.fill_rect(0.0, 0.0, self.width, self.height);
+                ctx.set_fill_style(&"rgba(100,100,100,1)".into());
+                ctx.set_font("bold 36px selif");
+                ctx.fill_text("finish!", self.width / 2. - 48., self.height / 2.);
+            }
             ctx.stroke();
         }
     }
