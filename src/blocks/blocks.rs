@@ -28,17 +28,15 @@ pub fn create() -> BlockBoard {
         }
     });
 
-    blocks
+    // TODO: ランダムではなく、埋めたほうがいいに決まっている
+    let (gps, _, _) = scanning(&blocks);
+    let dels = delete_points(&gps);
 
-    // // TODO: ランダムではなく、埋める
-    // let (gps, _, _) = scanning(&blocks);
-    // let dels = delete_points(&gps);
-
-    // if dels.is_empty() {
-    //     return blocks;
-    // } else {
-    //     create()
-    // }
+    if dels.is_empty() {
+        return blocks;
+    } else {
+        create()
+    }
 }
 
 pub fn valid(blocks: &BlockBoard, point: Point) -> Option<&Block> {
