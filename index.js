@@ -1,13 +1,39 @@
 const container = document.createElement("div");
-container.className =
-  "h-screen flex content-center items-center justify-center";
+container.className = `
+h-screen
+flex
+content-center
+items-center
+justify-center
+`;
 const loading = document.createElement("div");
-loading.className =
-  "animate-spin h-10 w-10 border-4 border-blue-500 rounded-full border-t-transparent";
-loading.className = "animate-ping h-4 w-4 bg-blue-600 rounded-full";
+loading.className = `
+animate-ping
+h-4
+w-4
+bg-blue-600
+rounded-full
+`;
 const button = document.createElement("button");
-button.className =
-  "text-white bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2";
+button.className = `
+text-white
+bg-gradient-to-br
+from-pink-500
+to-orange-400
+hover:bg-gradient-to-bl
+focus:ring-4
+focus:outline-none
+focus:ring-pink-200
+dark:focus:ring-pink-800
+font-medium
+rounded-lg
+text-sm
+px-5
+py-2.5
+text-center
+mr-2
+mb-2
+`;
 button.textContent = "play";
 
 (async () => {
