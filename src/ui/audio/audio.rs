@@ -7,17 +7,17 @@ use web_sys::AudioBuffer;
 use web_sys::AudioContext;
 use web_sys::*;
 
-pub struct Sound<'a> {
+pub struct Audio<'a> {
     path: Option<&'a str>,
     array_buffer: Rc<RefCell<Option<ArrayBuffer>>>,
     audio_buffer: Rc<RefCell<Option<AudioBuffer>>>,
     context: Rc<AudioContext>,
 }
 
-// TODO: safariで音出ない
-impl<'a> Sound<'a> {
+// TODO: safariで音出ない時ある
+impl<'a> Audio<'a> {
     pub fn from(ab: AudioBuffer, ctx: Rc<AudioContext>) -> Self {
-        Sound {
+        Audio {
             path: None,
             array_buffer: Rc::new(RefCell::new(None)),
             audio_buffer: Rc::new(RefCell::new(Some(ab))),
@@ -82,16 +82,4 @@ impl<'a> Sound<'a> {
             }
         }
     }
-}
-
-pub struct SE<'a> {
-    pub cancel: Sound<'a>,
-    pub change: Sound<'a>,
-    pub delete: Sound<'a>,
-    pub landing: Sound<'a>,
-    pub ok: Sound<'a>,
-}
-
-pub struct BGM<'a> {
-    pub one: Sound<'a>,
 }

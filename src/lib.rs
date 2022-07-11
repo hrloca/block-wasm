@@ -2,6 +2,7 @@
 
 use std::{cell::RefCell, panic, rc::Rc};
 use wasm_bindgen::{prelude::*, JsCast};
+use web_sys::AudioContextState;
 use web_sys::*;
 
 pub mod blocks;
@@ -51,11 +52,11 @@ pub async fn run(se: Vec<JsValue>) {
 
     let actx = Rc::new(AudioContext::new().unwrap());
     let se = Rc::new(ui::SE {
-        cancel: ui::Sound::from(se[0].clone(), Rc::clone(&actx)),
-        change: ui::Sound::from(se[1].clone(), Rc::clone(&actx)),
-        delete: ui::Sound::from(se[2].clone(), Rc::clone(&actx)),
-        landing: ui::Sound::from(se[3].clone(), Rc::clone(&actx)),
-        ok: ui::Sound::from(se[4].clone(), Rc::clone(&actx)),
+        cancel: ui::Audio::from(se[0].clone(), Rc::clone(&actx)),
+        change: ui::Audio::from(se[1].clone(), Rc::clone(&actx)),
+        delete: ui::Audio::from(se[2].clone(), Rc::clone(&actx)),
+        landing: ui::Audio::from(se[3].clone(), Rc::clone(&actx)),
+        ok: ui::Audio::from(se[4].clone(), Rc::clone(&actx)),
     });
 
     let particle_render = Rc::new(RefCell::new(ui::ParticleRender::create()));
@@ -132,6 +133,7 @@ pub async fn run(se: Vec<JsValue>) {
         let store = Rc::clone(&store);
         let scheduler = Rc::clone(&scheduler);
         let particle_render = Rc::clone(&particle_render);
+        let actx = Rc::clone(&actx);
         Closure::wrap(Box::new(move |e: MouseEvent| {
             let offset_x = e.offset_x();
             let offset_y = e.offset_y();
@@ -139,6 +141,10 @@ pub async fn run(se: Vec<JsValue>) {
             let state = store.get_state();
             let mut qs = scheduler.borrow_mut();
             let mut pr = particle_render.borrow_mut();
+
+            if actx.state() == AudioContextState::Suspended {
+                actx.resume();
+            }
 
             if blocks::is_over(&state.blocks) {
                 dom::location().reload();
