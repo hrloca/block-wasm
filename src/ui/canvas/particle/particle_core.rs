@@ -1,7 +1,5 @@
 use super::*;
 use js_sys::Date;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 pub struct ParticleCore {
     total_time: f64,
@@ -28,7 +26,7 @@ impl ParticleCore {
     }
 
     pub fn rate(&self) -> f64 {
-        crate::libs::clamp(self.elapsed() / self.total_time, 1.0, 0.0)
+        crate::fns::clamp(self.elapsed() / self.total_time, 1.0, 0.0)
     }
 
     pub fn rate_with(&self, ease: Ease) -> f64 {

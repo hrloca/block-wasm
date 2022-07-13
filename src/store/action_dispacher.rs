@@ -1,6 +1,6 @@
 use super::*;
 use crate::board::*;
-use crate::tools::store::Store;
+use crate::modules::store::Store;
 
 pub type StoreType = Store<State, Actions>;
 

@@ -1,24 +1,22 @@
 #![feature(drain_filter)]
 
+pub mod blocks;
+pub mod board;
+pub mod dom;
+pub mod fns;
+pub mod modules;
+pub mod store;
+pub mod ui;
+
 use std::{cell::RefCell, panic, rc::Rc};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::AudioContextState;
 use web_sys::*;
 
-pub mod blocks;
-pub mod board;
-pub mod dom;
-pub mod libs;
-pub mod store;
-pub mod tools;
-pub mod ui;
-
-mod playground;
-
-use libs::*;
+use fns::*;
+use modules::frame_engine::FrameEngine;
+use modules::store::Store;
 use store::*;
-use tools::frame_engine::FrameEngine;
-use tools::store::Store;
 use ui::Tag;
 
 pub struct Ctx<'a> {
@@ -31,16 +29,19 @@ pub struct Ctx<'a> {
 #[wasm_bindgen]
 pub async fn run(se: Vec<JsValue>) {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
+
     let se: Vec<AudioBuffer> = se
         .into_iter()
         .map(|jsv| JsCast::dyn_into::<AudioBuffer>(jsv).unwrap())
         .collect();
 
     let store = Rc::new(Store::create(store::State::create(), reducer));
-    // store.subscribe(Box::new(|state| {}));
-    let h = ui::HTML::new();
-    let h = Rc::new(h);
+    let h = Rc::new(ui::HTML::new());
+
     let canvas_el: HtmlCanvasElement = Tag::cast(Tag::name("canvas").unwrap());
+    let time_viewer: HtmlInputElement = Tag::cast(Tag::name("input").unwrap());
+    time_viewer.set_attribute("step", "1").unwrap();
+    time_viewer.set_value("00:00:00");
     let canvas = ui::Canvas::create(canvas_el);
     let field = ui::Field::create(
         &canvas.el,
@@ -142,6 +143,9 @@ pub async fn run(se: Vec<JsValue>) {
             let mut qs = scheduler.borrow_mut();
             let mut pr = particle_render.borrow_mut();
 
+            // for Safari
+            // 時々音が出ない事象を解消するため
+            // https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices
             if actx.state() == AudioContextState::Suspended {
                 actx.resume();
             }
@@ -186,6 +190,7 @@ pub async fn run(se: Vec<JsValue>) {
         h.render(h.node(
             Tag::name("div").as_ref(),
             vec![
+                time_viewer.as_ref(),
                 h.node(Tag::name("div").as_ref(), vec![&canvas.el])
             ],
         ));

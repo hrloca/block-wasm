@@ -14,7 +14,6 @@ pub struct Audio<'a> {
     context: Rc<AudioContext>,
 }
 
-// TODO: safariで音出ない時ある
 impl<'a> Audio<'a> {
     pub fn from(ab: AudioBuffer, ctx: Rc<AudioContext>) -> Self {
         Audio {

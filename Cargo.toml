@@ -33,6 +33,7 @@ features = [
   'MouseEvent',
   'Node',
   'Window',
+  'HtmlInputElement',
   'XmlHttpRequest',
   'AudioContext',
   'XmlHttpRequestResponseType',
