@@ -39,9 +39,6 @@ pub async fn run(se: Vec<JsValue>) {
     let h = Rc::new(ui::HTML::new());
 
     let canvas_el: HtmlCanvasElement = Tag::cast(Tag::name("canvas").unwrap());
-    let time_viewer: HtmlInputElement = Tag::cast(Tag::name("input").unwrap());
-    time_viewer.set_attribute("step", "1").unwrap();
-    time_viewer.set_value("00:00:00");
     let canvas = ui::Canvas::create(canvas_el);
     let field = ui::Field::create(
         &canvas.el,
@@ -183,6 +180,7 @@ pub async fn run(se: Vec<JsValue>) {
         .el
         .add_event_listener_with_callback("click", handler.as_ref().unchecked_ref())
         .unwrap();
+
     handler.forget();
 
     {
@@ -190,7 +188,6 @@ pub async fn run(se: Vec<JsValue>) {
         h.render(h.node(
             Tag::name("div").as_ref(),
             vec![
-                time_viewer.as_ref(),
                 h.node(Tag::name("div").as_ref(), vec![&canvas.el])
             ],
         ));
